@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback, useEffect } from 'react'
 import { Coffee, Pencil, AlertTriangle, CheckCircle2, XCircle, Trophy, Zap } from 'lucide-react'
 import ExerciseCard from './ExerciseCard'
 import ProgramEditor from './ProgramEditor'
+import ConfirmDialog from './ConfirmDialog'
 import { useWorkout } from '../WorkoutContext'
 import { countCompletedSets, countTotalSets, getWeeksSinceDate, isDeloadActive, getDeloadSets, getTodayStr, formatDate } from '../utils/calculations'
 
@@ -26,6 +27,7 @@ export default function TodayWorkout({ onStartTimer }) {
   const todayKey = getDayKey()
   const [selectedDay, setSelectedDay] = useState(todayKey)
   const [editing, setEditing] = useState(false)
+  const [confirmAction, setConfirmAction] = useState(null)
 
   const isToday = selectedDay === todayKey
   const workout = program[selectedDay]
@@ -87,7 +89,7 @@ export default function TodayWorkout({ onStartTimer }) {
             <button
               key={key}
               onClick={() => setSelectedDay(key)}
-              className={`relative flex flex-col items-center px-2 py-1.5 rounded-md transition-colors ${
+              className={`relative flex flex-col items-center px-2 py-2.5 rounded-md transition-colors active:opacity-70 ${
                 isSelected ? 'text-accent' : 'text-muted hover:text-text'
               }`}
             >
@@ -96,7 +98,7 @@ export default function TodayWorkout({ onStartTimer }) {
               </span>
               {/* Accent underline for selected */}
               {isSelected && (
-                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-accent rounded-full" />
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full" style={{ background: 'linear-gradient(to right, transparent, #e8ff47, transparent)', boxShadow: '0 0 6px rgba(232,255,71,0.8)' }} />
               )}
               {/* Dot for today (when not selected) */}
               {isLive && !isSelected && (
@@ -200,10 +202,10 @@ export default function TodayWorkout({ onStartTimer }) {
                     {Math.round(progress)}%
                   </span>
                 </div>
-                <div className="h-1 bg-border rounded-full overflow-hidden">
+                <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#1a1c1e', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.8)' }}>
                   <div
-                    className="h-full bg-accent rounded-full transition-all duration-500 ease-out"
-                    style={{ width: `${progress}%` }}
+                    className="h-full rounded-full transition-all duration-500 ease-out"
+                    style={{ width: `${progress}%`, background: 'linear-gradient(to right, #b8cc30, #e8ff47, #f5ff80)', boxShadow: '0 0 8px rgba(232,255,71,0.6), 0 0 2px rgba(232,255,71,1)' }}
                   />
                 </div>
               </div>
@@ -213,7 +215,8 @@ export default function TodayWorkout({ onStartTimer }) {
             {isToday && !session && (
               <button
                 onClick={handleStartWorkout}
-                className="mt-4 w-full py-3 rounded-lg bg-accent text-bg font-display text-lg tracking-wider hover:bg-accent/90 active:scale-[0.98] transition-all"
+                className="mt-4 w-full py-3 rounded-lg text-bg font-display text-lg tracking-wider active:scale-[0.98] transition-all"
+                style={{ background: 'linear-gradient(135deg, #c8e040, #e8ff47, #f0ff6a)', boxShadow: '0 0 16px rgba(232,255,71,0.25), 0 4px 12px rgba(0,0,0,0.4)' }}
               >
                 START WORKOUT
               </button>
@@ -222,8 +225,8 @@ export default function TodayWorkout({ onStartTimer }) {
 
           {/* Workout Complete banner */}
           {isToday && session?.completedAt && (
-            <div className="mx-4 mb-3 px-4 py-4 rounded-xl bg-accent/10 border border-accent/20 flex items-center gap-3">
-              <Trophy size={20} className="text-accent shrink-0" />
+            <div className="mx-4 mb-3 px-4 py-4 rounded-xl border border-accent/30 flex items-center gap-3" style={{ background: 'linear-gradient(135deg, rgba(232,255,71,0.12), rgba(232,255,71,0.04), transparent)', boxShadow: '0 0 20px rgba(232,255,71,0.08), inset 0 1px 0 rgba(232,255,71,0.1)' }}>
+              <Trophy size={20} className="text-accent shrink-0" style={{ filter: 'drop-shadow(0 0 8px rgba(232,255,71,0.7))' }} />
               <div>
                 <p className="text-sm font-display tracking-wider text-accent">WORKOUT COMPLETE</p>
                 <p className="text-[11px] font-mono text-muted mt-0.5">
@@ -266,28 +269,42 @@ export default function TodayWorkout({ onStartTimer }) {
           {isToday && session && !session.completedAt && (
             <div className="px-4 pt-4 space-y-2">
               <button
-                onClick={() => {
-                  if (confirm('Complete this workout? You can still view your logged sets in history.')) {
-                    completeSession(session.id)
-                  }
-                }}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-accent text-bg font-display text-lg tracking-wider hover:bg-accent/90 active:scale-[0.98] transition-all"
+                onClick={() => setConfirmAction({ type: 'complete' })}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-lg text-bg font-display text-lg tracking-wider active:scale-[0.98] transition-all"
+                style={{ background: 'linear-gradient(135deg, #c8e040, #e8ff47, #f0ff6a)', boxShadow: '0 0 24px rgba(232,255,71,0.35), 0 0 60px rgba(232,255,71,0.1), 0 4px 16px rgba(0,0,0,0.5)' }}
               >
                 <CheckCircle2 size={18} />
                 COMPLETE WORKOUT
               </button>
               <button
-                onClick={() => {
-                  if (confirm('Abort this workout? All logged sets will be discarded. This cannot be undone.')) {
-                    abortSession(session.id)
-                  }
-                }}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border border-accent-secondary/30 text-accent-secondary/70 text-xs font-mono uppercase tracking-wider hover:bg-accent-secondary/5 transition-colors"
+                onClick={() => setConfirmAction({ type: 'abort' })}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border border-accent-secondary/30 text-accent-secondary/70 text-xs font-mono uppercase tracking-wider hover:bg-accent-secondary/5 active:opacity-70 transition-colors"
               >
                 <XCircle size={14} />
                 Abort Workout
               </button>
             </div>
+          )}
+
+          {/* Confirm dialogs */}
+          {confirmAction?.type === 'complete' && (
+            <ConfirmDialog
+              title="COMPLETE WORKOUT"
+              message="Finish this session? Your logged sets will be saved to history."
+              confirmLabel="Complete"
+              onConfirm={() => { completeSession(session.id); setConfirmAction(null) }}
+              onCancel={() => setConfirmAction(null)}
+            />
+          )}
+          {confirmAction?.type === 'abort' && (
+            <ConfirmDialog
+              title="ABORT WORKOUT"
+              message="All logged sets will be discarded. This cannot be undone."
+              confirmLabel="Abort"
+              danger
+              onConfirm={() => { abortSession(session.id); setConfirmAction(null) }}
+              onCancel={() => setConfirmAction(null)}
+            />
           )}
         </>
       )}

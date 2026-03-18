@@ -13,7 +13,11 @@ export default function useLocalStorage(key, initialValue) {
   const setValue = useCallback((value) => {
     setStoredValue((prev) => {
       const nextValue = typeof value === 'function' ? value(prev) : value
-      localStorage.setItem(key, JSON.stringify(nextValue))
+      try {
+        localStorage.setItem(key, JSON.stringify(nextValue))
+      } catch (e) {
+        console.error(`[useLocalStorage] Failed to persist "${key}":`, e)
+      }
       return nextValue
     })
   }, [key])
