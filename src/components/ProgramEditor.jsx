@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { ArrowUp, ArrowDown, Trash2, Plus, RotateCcw, X, Search } from 'lucide-react'
 import { useWorkout } from '../WorkoutContext'
 import { DEFAULT_PROGRAM, EXERCISE_LIBRARY } from '../data/workouts'
@@ -122,6 +122,7 @@ export default function ProgramEditor({ dayKey, onClose }) {
             onAdd={addExercise}
             onCancel={() => setAddingExercise(false)}
             existingIds={workout.exercises.map(e => e.id)}
+            dayKey={dayKey}
           />
         ) : (
           <button
@@ -235,7 +236,7 @@ function ExerciseEditForm({ exercise, onSave, onCancel }) {
   )
 }
 
-function AddExercisePanel({ onAdd, onCancel, existingIds }) {
+function AddExercisePanel({ onAdd, onCancel, existingIds, dayKey }) {
   const [search, setSearch] = useState('')
   const [customMode, setCustomMode] = useState(false)
   const [customName, setCustomName] = useState('')
@@ -244,7 +245,24 @@ function AddExercisePanel({ onAdd, onCancel, existingIds }) {
   const [customRepsMax, setCustomRepsMax] = useState('12')
   const [customRest, setCustomRest] = useState('90')
 
-  const filtered = EXERCISE_LIBRARY.filter(
+  // Only show exercises from days sharing muscle groups with the current day
+  const relevantExercises = useMemo(() => {
+    const dayMuscles = DEFAULT_PROGRAM[dayKey]?.muscleGroups || []
+    const seen = new Set()
+    const result = []
+    Object.values(DEFAULT_PROGRAM).forEach(day => {
+      if (!day.muscleGroups.some(g => dayMuscles.includes(g))) return
+      day.exercises.forEach(ex => {
+        if (!seen.has(ex.id)) {
+          seen.add(ex.id)
+          result.push(ex)
+        }
+      })
+    })
+    return result
+  }, [dayKey])
+
+  const filtered = relevantExercises.filter(
     ex => !existingIds.includes(ex.id) && ex.name.toLowerCase().includes(search.toLowerCase())
   )
 
