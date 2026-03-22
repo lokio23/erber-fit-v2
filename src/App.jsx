@@ -5,6 +5,7 @@ import TodayWorkout from './components/TodayWorkout'
 import WorkoutHistory from './components/WorkoutHistory'
 import Settings from './components/Settings'
 import RestTimer from './components/RestTimer'
+import AuthButton from './components/AuthButton'
 
 const ProgressCharts = lazy(() => import('./components/ProgressCharts'))
 
@@ -40,6 +41,7 @@ export default function App() {
               ERBER FIT
             </h1>
           </div>
+          <AuthButton />
         </header>
 
         {/* Main content */}

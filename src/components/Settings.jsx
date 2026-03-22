@@ -1,10 +1,11 @@
 import { useRef } from 'react'
-import { Download, Upload, Volume2, VolumeX, Smartphone, Zap, ZapOff } from 'lucide-react'
+import { Download, Upload, Volume2, VolumeX, Smartphone, Zap, ZapOff, LogOut, Cloud, CloudOff, RefreshCw } from 'lucide-react'
 import { useWorkout } from '../WorkoutContext'
+import { supabase } from '../lib/supabase'
 import { getWeeksSinceDate, isDeloadActive, getTodayStr, formatDate } from '../utils/calculations'
 
 export default function Settings() {
-  const { settings, setSettings, program, sessions, setProgram, setSessions } = useWorkout()
+  const { settings, setSettings, program, sessions, setProgram, setSessions, user, signIn, signOut, syncStatus } = useWorkout()
   const fileInputRef = useRef(null)
 
   const deloadActive = isDeloadActive(settings)
@@ -56,6 +57,61 @@ export default function Settings() {
       </div>
 
       <div className="px-4 space-y-2">
+        {/* Account / Cloud Sync */}
+        {supabase && (
+          <SettingCard>
+            {user ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    {user.user_metadata?.avatar_url ? (
+                      <img src={user.user_metadata.avatar_url} alt="" className="w-8 h-8 rounded-full" referrerPolicy="no-referrer" />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center">
+                        <span className="text-xs font-mono text-accent">{user.email?.[0]?.toUpperCase()}</span>
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-sm font-body font-medium text-text">{user.user_metadata?.full_name || user.email}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        {syncStatus === 'synced' && <Cloud size={10} className="text-accent" />}
+                        {syncStatus === 'syncing' && <RefreshCw size={10} className="text-accent animate-spin" />}
+                        {syncStatus === 'error' && <CloudOff size={10} className="text-accent-secondary" />}
+                        <p className="text-[10px] font-mono text-muted">
+                          {syncStatus === 'synced' && 'Synced'}
+                          {syncStatus === 'syncing' && 'Syncing...'}
+                          {syncStatus === 'error' && 'Sync error'}
+                          {syncStatus === 'idle' && 'Cloud backup'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={signOut}
+                  className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-border text-xs font-mono text-muted hover:border-red-500/30 hover:text-red-400 transition-colors"
+                >
+                  <LogOut size={12} />
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm font-body font-medium text-text">Cloud Backup</p>
+                  <p className="text-xs font-mono text-muted mt-0.5">Sign in to sync your data across devices</p>
+                </div>
+                <button
+                  onClick={signIn}
+                  className="w-full py-2.5 rounded-lg bg-accent/10 border border-accent/20 text-xs font-mono text-accent hover:bg-accent/20 active:opacity-70 transition-colors"
+                >
+                  Sign in with Google
+                </button>
+              </div>
+            )}
+          </SettingCard>
+        )}
+
         {/* Unit toggle */}
         <SettingCard>
           <div className="flex items-center justify-between">
