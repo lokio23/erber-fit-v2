@@ -116,3 +116,72 @@ export function getTodayStr() {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
+
+export function calcEstimated1RM(weight, reps) {
+  if (reps <= 0 || weight <= 0) return 0
+  if (reps === 1) return weight
+  return Math.round(weight * (1 + reps / 30))
+}
+
+export function getWeekStart(dateStr, weeksAgo = 0) {
+  const d = new Date(dateStr + 'T12:00:00')
+  d.setDate(d.getDate() - d.getDay() - weeksAgo * 7)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+export function getSessionsInWeek(sessions, weeksAgo = 0) {
+  const today = getTodayStr()
+  const weekStart = getWeekStart(today, weeksAgo)
+  const nextWeekStart = getWeekStart(today, weeksAgo - 1)
+  return sessions.filter(s => s.date >= weekStart && s.date < nextWeekStart)
+}
+
+export function calcSetsPerMuscleGroup(sessions, exerciseLibrary, weeksAgo = 0) {
+  const weekSessions = getSessionsInWeek(sessions, weeksAgo)
+  const muscleMap = {}
+
+  // Build exercise → muscleGroups lookup from library
+  const exerciseMuscles = {}
+  for (const ex of exerciseLibrary) {
+    exerciseMuscles[ex.id] = ex.muscleGroups || []
+  }
+
+  for (const session of weekSessions) {
+    for (const ex of session.exercises) {
+      const completedSets = ex.sets.filter(s => s.completed).length
+      if (completedSets === 0) continue
+      const muscles = exerciseMuscles[ex.exerciseId] || []
+      for (const muscle of muscles) {
+        muscleMap[muscle] = (muscleMap[muscle] || 0) + completedSets
+      }
+    }
+  }
+
+  return muscleMap
+}
+
+export function calcWeeklyTotalSets(sessions, weeksAgo = 0) {
+  const weekSessions = getSessionsInWeek(sessions, weeksAgo)
+  return weekSessions.reduce((total, s) => total + countCompletedSets(s), 0)
+}
+
+export function calcWorkoutsThisWeek(sessions) {
+  return getSessionsInWeek(sessions, 0).filter(s => s.completedAt).length
+}
+
+export function calcStreak(sessions) {
+  let streak = 0
+  for (let w = 0; w < 52; w++) {
+    const weekSessions = getSessionsInWeek(sessions, w)
+    const completed = weekSessions.filter(s => s.completedAt).length
+    if (completed >= 3) streak++
+    else break
+  }
+  return streak
+}
+
+export function daysSince(dateStr) {
+  if (!dateStr) return Infinity
+  const diff = Date.now() - new Date(dateStr + 'T12:00:00').getTime()
+  return Math.floor(diff / (24 * 60 * 60 * 1000))
+}
