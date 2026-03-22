@@ -6,6 +6,7 @@ import WorkoutHistory from './components/WorkoutHistory'
 import Settings from './components/Settings'
 import RestTimer from './components/RestTimer'
 import AuthButton from './components/AuthButton'
+import ErrorBoundary from './components/ErrorBoundary'
 
 const ProgressCharts = lazy(() => import('./components/ProgressCharts'))
 
@@ -45,6 +46,7 @@ export default function App() {
         </header>
 
         {/* Main content */}
+        <ErrorBoundary>
         <main className="flex-1 overflow-y-auto pb-20">
           {activeTab === 'today' && <TodayWorkout onStartTimer={handleStartTimer} />}
           {activeTab === 'history' && <WorkoutHistory />}
@@ -55,6 +57,7 @@ export default function App() {
           )}
           {activeTab === 'settings' && <Settings />}
         </main>
+        </ErrorBoundary>
 
         {/* Rest timer floating pill */}
         {timerActive && (

@@ -1,5 +1,9 @@
 const LBS_TO_KG = 0.453592
 const KG_TO_LBS = 2.20462
+const MS_PER_DAY = 24 * 60 * 60 * 1000
+const MS_PER_WEEK = 7 * MS_PER_DAY
+const STREAK_MIN_WORKOUTS = 3
+const MAX_STREAK_WEEKS = 52
 
 export function convertWeight(weight, fromUnit, toUnit) {
   if (fromUnit === toUnit) return weight
@@ -50,7 +54,7 @@ export function findPR(sessions, exerciseId) {
   return best
 }
 
-export function checkProgressiveOverload(sessions, exerciseId) {
+export function isWeightStagnant(sessions, exerciseId) {
   const recent = sessions
     .filter(s => s.exercises.some(e => e.exerciseId === exerciseId))
     .slice(-2)
@@ -81,7 +85,7 @@ export function getLastSessionWeight(sessions, exerciseId) {
 export function getWeeksSinceDate(dateStr) {
   if (!dateStr) return Infinity
   const diff = Date.now() - new Date(dateStr).getTime()
-  return Math.floor(diff / (7 * 24 * 60 * 60 * 1000))
+  return Math.floor(diff / MS_PER_WEEK)
 }
 
 export function isDeloadActive(settings) {
@@ -170,11 +174,12 @@ export function calcWorkoutsThisWeek(sessions) {
 }
 
 export function calcStreak(sessions) {
+  if (sessions.length === 0) return 0
   let streak = 0
-  for (let w = 0; w < 52; w++) {
+  for (let w = 0; w < MAX_STREAK_WEEKS; w++) {
     const weekSessions = getSessionsInWeek(sessions, w)
     const completed = weekSessions.filter(s => s.completedAt).length
-    if (completed >= 3) streak++
+    if (completed >= STREAK_MIN_WORKOUTS) streak++
     else break
   }
   return streak
@@ -183,5 +188,5 @@ export function calcStreak(sessions) {
 export function daysSince(dateStr) {
   if (!dateStr) return Infinity
   const diff = Date.now() - new Date(dateStr + 'T12:00:00').getTime()
-  return Math.floor(diff / (24 * 60 * 60 * 1000))
+  return Math.floor(diff / MS_PER_DAY)
 }
