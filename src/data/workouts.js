@@ -85,10 +85,130 @@ export const DEFAULT_PROGRAM = {
   },
 }
 
-// All built-in exercise IDs for the exercise library picker
-export const EXERCISE_LIBRARY = Object.values(DEFAULT_PROGRAM)
-  .flatMap(day => day.exercises)
-  .reduce((acc, ex) => {
-    if (!acc.find(e => e.id === ex.id)) acc.push(ex)
-    return acc
-  }, [])
+// Comprehensive exercise library organized by muscle group
+export const EXERCISE_LIBRARY = [
+  // ── CHEST ──
+  { id: 'bench_press', name: 'Barbell Bench Press', sets: 4, repsMin: 4, repsMax: 6, restSeconds: 180, isBuiltIn: true, isCompound: true, muscleGroups: ['Chest', 'Triceps'] },
+  { id: 'incline_db_press', name: 'Incline Dumbbell Press', sets: 3, repsMin: 8, repsMax: 10, restSeconds: 120, isBuiltIn: true, isCompound: true, muscleGroups: ['Chest', 'Shoulders'] },
+  { id: 'incline_barbell_press', name: 'Incline Barbell Press', sets: 4, repsMin: 8, repsMax: 10, restSeconds: 120, isBuiltIn: true, isCompound: true, muscleGroups: ['Chest', 'Shoulders'] },
+  { id: 'flat_db_press', name: 'Flat Dumbbell Press', sets: 3, repsMin: 8, repsMax: 12, restSeconds: 120, isBuiltIn: true, isCompound: true, muscleGroups: ['Chest', 'Triceps'] },
+  { id: 'decline_bench_press', name: 'Decline Bench Press', sets: 3, repsMin: 8, repsMax: 10, restSeconds: 120, isBuiltIn: true, isCompound: true, muscleGroups: ['Chest', 'Triceps'] },
+  { id: 'close_grip_bench', name: 'Close-Grip Bench Press', sets: 3, repsMin: 8, repsMax: 10, restSeconds: 120, isBuiltIn: true, isCompound: true, muscleGroups: ['Chest', 'Triceps'] },
+  { id: 'floor_press', name: 'Floor Press (Barbell or DB)', sets: 3, repsMin: 8, repsMax: 10, restSeconds: 120, isBuiltIn: true, isCompound: true, muscleGroups: ['Chest', 'Triceps'] },
+  { id: 'machine_chest_press', name: 'Machine Chest Press', sets: 3, repsMin: 10, repsMax: 12, restSeconds: 90, isBuiltIn: true, isCompound: true, muscleGroups: ['Chest'] },
+  { id: 'cable_crossover', name: 'Cable Crossover / Pec Fly', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 90, isBuiltIn: true, isCompound: false, muscleGroups: ['Chest'] },
+  { id: 'db_chest_fly', name: 'Dumbbell Chest Fly', sets: 3, repsMin: 10, repsMax: 15, restSeconds: 90, isBuiltIn: true, isCompound: false, muscleGroups: ['Chest'] },
+  { id: 'chest_dip', name: 'Chest Dip (weighted)', sets: 3, repsMin: 10, repsMax: 12, restSeconds: 90, isBuiltIn: true, isCompound: true, muscleGroups: ['Chest', 'Triceps'] },
+  { id: 'push_up', name: 'Push-Up (weighted or BW)', sets: 3, repsMin: 10, repsMax: 20, restSeconds: 60, isBuiltIn: true, isCompound: true, muscleGroups: ['Chest', 'Triceps'] },
+  { id: 'landmine_press', name: 'Landmine Press', sets: 3, repsMin: 10, repsMax: 12, restSeconds: 90, isBuiltIn: true, isCompound: true, muscleGroups: ['Chest', 'Shoulders'] },
+  { id: 'svend_press', name: 'Svend Press', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: false, muscleGroups: ['Chest'] },
+
+  // ── SHOULDERS ──
+  { id: 'seated_db_shoulder_press', name: 'Seated DB Shoulder Press', sets: 3, repsMin: 8, repsMax: 10, restSeconds: 120, isBuiltIn: true, isCompound: true, muscleGroups: ['Shoulders'] },
+  { id: 'machine_shoulder_press', name: 'Machine Shoulder Press', sets: 3, repsMin: 10, repsMax: 12, restSeconds: 120, isBuiltIn: true, isCompound: true, muscleGroups: ['Shoulders'] },
+  { id: 'standing_ohp', name: 'Standing Overhead Press', sets: 4, repsMin: 5, repsMax: 8, restSeconds: 180, isBuiltIn: true, isCompound: true, muscleGroups: ['Shoulders', 'Triceps'] },
+  { id: 'arnold_press', name: 'Arnold Press', sets: 3, repsMin: 8, repsMax: 12, restSeconds: 120, isBuiltIn: true, isCompound: true, muscleGroups: ['Shoulders'] },
+  { id: 'cable_lateral_raise', name: 'Cable Lateral Raise', sets: 3, repsMin: 15, repsMax: 20, restSeconds: 90, isBuiltIn: true, isCompound: false, muscleGroups: ['Shoulders'] },
+  { id: 'db_lateral_raise', name: 'Dumbbell Lateral Raise', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: false, muscleGroups: ['Shoulders'] },
+  { id: 'db_lateral_raise_drop', name: 'DB Lateral Raise drop set', sets: 4, repsMin: 15, repsMax: 25, restSeconds: 90, isBuiltIn: true, isCompound: false, muscleGroups: ['Shoulders'] },
+  { id: 'db_front_raise', name: 'Dumbbell Front Raise', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: false, muscleGroups: ['Shoulders'] },
+  { id: 'plate_front_raise', name: 'Plate Front Raise', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: false, muscleGroups: ['Shoulders'] },
+  { id: 'upright_row', name: 'Upright Row (Cable or BB)', sets: 3, repsMin: 10, repsMax: 15, restSeconds: 90, isBuiltIn: true, isCompound: true, muscleGroups: ['Shoulders'] },
+  { id: 'lu_raise', name: 'Lu Raise', sets: 3, repsMin: 10, repsMax: 12, restSeconds: 60, isBuiltIn: true, isCompound: false, muscleGroups: ['Shoulders'] },
+
+  // ── TRICEPS ──
+  { id: 'overhead_cable_tricep_ext', name: 'Overhead Cable Tricep Extension', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 90, isBuiltIn: true, isCompound: false, muscleGroups: ['Triceps'] },
+  { id: 'cable_pushdown', name: 'Cable Pushdown', sets: 3, repsMin: 15, repsMax: 20, restSeconds: 60, isBuiltIn: true, isCompound: false, muscleGroups: ['Triceps'] },
+  { id: 'ez_bar_skullcrusher', name: 'EZ Bar Skullcrusher', sets: 3, repsMin: 10, repsMax: 12, restSeconds: 90, isBuiltIn: true, isCompound: false, muscleGroups: ['Triceps'] },
+  { id: 'tricep_kickback', name: 'Tricep Kickback (DB or Cable)', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: false, muscleGroups: ['Triceps'] },
+  { id: 'diamond_pushup', name: 'Diamond Push-Up', sets: 3, repsMin: 10, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: true, muscleGroups: ['Triceps', 'Chest'] },
+  { id: 'tricep_dip', name: 'Tricep Dip (bench)', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: true, muscleGroups: ['Triceps'] },
+  { id: 'single_arm_pushdown', name: 'Single-Arm Cable Pushdown', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: false, muscleGroups: ['Triceps'] },
+
+  // ── BACK ──
+  { id: 'weighted_pullup', name: 'Weighted Pull-Up', sets: 4, repsMin: 4, repsMax: 6, restSeconds: 180, isBuiltIn: true, isCompound: true, muscleGroups: ['Back', 'Biceps'] },
+  { id: 'chin_up', name: 'Chin-Up (weighted or BW)', sets: 3, repsMin: 6, repsMax: 10, restSeconds: 120, isBuiltIn: true, isCompound: true, muscleGroups: ['Back', 'Biceps'] },
+  { id: 'barbell_row', name: 'Barbell Bent-Over Row', sets: 3, repsMin: 6, repsMax: 8, restSeconds: 180, isBuiltIn: true, isCompound: true, muscleGroups: ['Back'] },
+  { id: 'pendlay_row', name: 'Pendlay Row', sets: 3, repsMin: 5, repsMax: 8, restSeconds: 180, isBuiltIn: true, isCompound: true, muscleGroups: ['Back'] },
+  { id: 't_bar_row', name: 'T-Bar Row', sets: 3, repsMin: 8, repsMax: 12, restSeconds: 120, isBuiltIn: true, isCompound: true, muscleGroups: ['Back'] },
+  { id: 'single_arm_db_row', name: 'Single-Arm DB Row', sets: 3, repsMin: 10, repsMax: 12, restSeconds: 120, isBuiltIn: true, isCompound: true, muscleGroups: ['Back'] },
+  { id: 'chest_supported_row', name: 'Chest-Supported Row', sets: 3, repsMin: 10, repsMax: 12, restSeconds: 90, isBuiltIn: true, isCompound: true, muscleGroups: ['Back'] },
+  { id: 'meadows_row', name: 'Meadows Row', sets: 3, repsMin: 8, repsMax: 12, restSeconds: 90, isBuiltIn: true, isCompound: true, muscleGroups: ['Back'] },
+  { id: 'seated_cable_row', name: 'Seated Cable Row', sets: 3, repsMin: 10, repsMax: 12, restSeconds: 120, isBuiltIn: true, isCompound: true, muscleGroups: ['Back'] },
+  { id: 'lat_pulldown', name: 'Lat Pulldown (wide grip)', sets: 4, repsMin: 10, repsMax: 12, restSeconds: 120, isBuiltIn: true, isCompound: true, muscleGroups: ['Back'] },
+  { id: 'neutral_grip_pulldown', name: 'Neutral Grip Lat Pulldown', sets: 3, repsMin: 10, repsMax: 12, restSeconds: 90, isBuiltIn: true, isCompound: true, muscleGroups: ['Back'] },
+  { id: 'straight_arm_pulldown', name: 'Straight-Arm Pulldown', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 90, isBuiltIn: true, isCompound: false, muscleGroups: ['Back'] },
+  { id: 'cable_pullover', name: 'Cable Pullover', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 90, isBuiltIn: true, isCompound: false, muscleGroups: ['Back'] },
+  { id: 'inverted_row', name: 'Inverted Row', sets: 3, repsMin: 8, repsMax: 15, restSeconds: 90, isBuiltIn: true, isCompound: true, muscleGroups: ['Back'] },
+  { id: 'rack_pull', name: 'Rack Pull', sets: 3, repsMin: 5, repsMax: 8, restSeconds: 180, isBuiltIn: true, isCompound: true, muscleGroups: ['Back'] },
+  { id: 'db_shrug', name: 'Dumbbell Shrug', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: false, muscleGroups: ['Back'] },
+  { id: 'barbell_shrug', name: 'Barbell Shrug', sets: 4, repsMin: 10, repsMax: 15, restSeconds: 90, isBuiltIn: true, isCompound: false, muscleGroups: ['Back'] },
+
+  // ── BICEPS ──
+  { id: 'incline_db_curl', name: 'Incline Dumbbell Curl', sets: 3, repsMin: 10, repsMax: 12, restSeconds: 90, isBuiltIn: true, isCompound: false, muscleGroups: ['Biceps'] },
+  { id: 'hammer_curl', name: 'Hammer Curl', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 90, isBuiltIn: true, isCompound: false, muscleGroups: ['Biceps'] },
+  { id: 'ez_bar_curl', name: 'EZ Bar Curl', sets: 3, repsMin: 10, repsMax: 12, restSeconds: 90, isBuiltIn: true, isCompound: false, muscleGroups: ['Biceps'] },
+  { id: 'single_arm_cable_curl', name: 'Single-Arm Cable Curl', sets: 2, repsMin: 12, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: false, muscleGroups: ['Biceps'] },
+  { id: 'preacher_curl', name: 'Preacher Curl (DB or EZ)', sets: 3, repsMin: 10, repsMax: 12, restSeconds: 90, isBuiltIn: true, isCompound: false, muscleGroups: ['Biceps'] },
+  { id: 'concentration_curl', name: 'Concentration Curl', sets: 3, repsMin: 10, repsMax: 12, restSeconds: 60, isBuiltIn: true, isCompound: false, muscleGroups: ['Biceps'] },
+  { id: 'spider_curl', name: 'Spider Curl', sets: 3, repsMin: 10, repsMax: 12, restSeconds: 60, isBuiltIn: true, isCompound: false, muscleGroups: ['Biceps'] },
+  { id: 'cable_curl', name: 'Cable Curl (straight bar)', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: false, muscleGroups: ['Biceps'] },
+  { id: 'reverse_curl', name: 'Reverse Curl (EZ bar)', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: false, muscleGroups: ['Biceps'] },
+  { id: 'bayesian_curl', name: 'Bayesian Cable Curl', sets: 3, repsMin: 10, repsMax: 12, restSeconds: 60, isBuiltIn: true, isCompound: false, muscleGroups: ['Biceps'] },
+
+  // ── REAR DELTS ──
+  { id: 'face_pull', name: 'Face Pull', sets: 3, repsMin: 15, repsMax: 20, restSeconds: 90, isBuiltIn: true, isCompound: false, muscleGroups: ['Rear Delts', 'Shoulders'] },
+  { id: 'reverse_pec_deck', name: 'Reverse Pec Deck', sets: 3, repsMin: 15, repsMax: 20, restSeconds: 90, isBuiltIn: true, isCompound: false, muscleGroups: ['Rear Delts'] },
+  { id: 'rear_delt_fly', name: 'Rear Delt Fly (DB)', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: false, muscleGroups: ['Rear Delts'] },
+  { id: 'band_pull_apart', name: 'Band Pull-Apart', sets: 3, repsMin: 15, repsMax: 25, restSeconds: 60, isBuiltIn: true, isCompound: false, muscleGroups: ['Rear Delts'] },
+  { id: 'cable_rear_delt_fly', name: 'Cable Rear Delt Fly', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: false, muscleGroups: ['Rear Delts'] },
+
+  // ── QUADS ──
+  { id: 'barbell_squat', name: 'Barbell Back Squat', sets: 4, repsMin: 4, repsMax: 6, restSeconds: 180, isBuiltIn: true, isCompound: true, muscleGroups: ['Quads', 'Glutes'] },
+  { id: 'hack_squat', name: 'Hack Squat', sets: 4, repsMin: 8, repsMax: 10, restSeconds: 120, isBuiltIn: true, isCompound: true, muscleGroups: ['Quads'] },
+  { id: 'front_squat', name: 'Front Squat', sets: 4, repsMin: 6, repsMax: 8, restSeconds: 180, isBuiltIn: true, isCompound: true, muscleGroups: ['Quads', 'Glutes'] },
+  { id: 'goblet_squat', name: 'Goblet Squat', sets: 3, repsMin: 10, repsMax: 15, restSeconds: 90, isBuiltIn: true, isCompound: true, muscleGroups: ['Quads', 'Glutes'] },
+  { id: 'smith_squat', name: 'Smith Machine Squat', sets: 3, repsMin: 8, repsMax: 12, restSeconds: 120, isBuiltIn: true, isCompound: true, muscleGroups: ['Quads', 'Glutes'] },
+  { id: 'leg_press', name: 'Leg Press', sets: 3, repsMin: 10, repsMax: 12, restSeconds: 120, isBuiltIn: true, isCompound: true, muscleGroups: ['Quads', 'Glutes'] },
+  { id: 'leg_extension', name: 'Leg Extension', sets: 3, repsMin: 15, repsMax: 20, restSeconds: 90, isBuiltIn: true, isCompound: false, muscleGroups: ['Quads'] },
+  { id: 'bulgarian_split_squat', name: 'Bulgarian Split Squat', sets: 3, repsMin: 8, repsMax: 12, restSeconds: 120, isBuiltIn: true, isCompound: true, muscleGroups: ['Quads', 'Glutes'] },
+  { id: 'walking_lunges', name: 'Walking Lunges (DBs)', sets: 3, repsMin: 10, repsMax: 12, restSeconds: 120, isBuiltIn: true, isCompound: true, muscleGroups: ['Quads', 'Glutes'] },
+  { id: 'reverse_lunge', name: 'Reverse Lunge (DB or BB)', sets: 3, repsMin: 10, repsMax: 12, restSeconds: 90, isBuiltIn: true, isCompound: true, muscleGroups: ['Quads', 'Glutes'] },
+  { id: 'lateral_lunge', name: 'Lateral Lunge', sets: 3, repsMin: 10, repsMax: 12, restSeconds: 90, isBuiltIn: true, isCompound: true, muscleGroups: ['Quads', 'Glutes'] },
+  { id: 'step_up', name: 'Step-Up (DB or BB)', sets: 3, repsMin: 10, repsMax: 12, restSeconds: 90, isBuiltIn: true, isCompound: true, muscleGroups: ['Quads', 'Glutes'] },
+  { id: 'sissy_squat', name: 'Sissy Squat', sets: 3, repsMin: 10, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: false, muscleGroups: ['Quads'] },
+  { id: 'box_jump', name: 'Box Jump', sets: 3, repsMin: 5, repsMax: 8, restSeconds: 90, isBuiltIn: true, isCompound: true, muscleGroups: ['Quads', 'Glutes'] },
+
+  // ── HAMSTRINGS ──
+  { id: 'romanian_deadlift', name: 'Romanian Deadlift', sets: 3, repsMin: 8, repsMax: 10, restSeconds: 180, isBuiltIn: true, isCompound: true, muscleGroups: ['Hamstrings', 'Glutes'] },
+  { id: 'sumo_deadlift', name: 'Sumo Deadlift', sets: 3, repsMin: 6, repsMax: 8, restSeconds: 180, isBuiltIn: true, isCompound: true, muscleGroups: ['Hamstrings', 'Glutes', 'Quads'] },
+  { id: 'stiff_leg_deadlift', name: 'Stiff-Leg Deadlift', sets: 3, repsMin: 8, repsMax: 12, restSeconds: 120, isBuiltIn: true, isCompound: true, muscleGroups: ['Hamstrings', 'Glutes'] },
+  { id: 'lying_leg_curl', name: 'Lying Leg Curl', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 90, isBuiltIn: true, isCompound: false, muscleGroups: ['Hamstrings'] },
+  { id: 'seated_leg_curl', name: 'Seated Leg Curl', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 90, isBuiltIn: true, isCompound: false, muscleGroups: ['Hamstrings'] },
+  { id: 'good_morning', name: 'Good Morning', sets: 3, repsMin: 8, repsMax: 12, restSeconds: 120, isBuiltIn: true, isCompound: true, muscleGroups: ['Hamstrings', 'Glutes'] },
+  { id: 'nordic_curl', name: 'Nordic Hamstring Curl', sets: 3, repsMin: 5, repsMax: 8, restSeconds: 120, isBuiltIn: true, isCompound: false, muscleGroups: ['Hamstrings'] },
+  { id: 'glute_ham_raise', name: 'Glute-Ham Raise', sets: 3, repsMin: 8, repsMax: 12, restSeconds: 90, isBuiltIn: true, isCompound: true, muscleGroups: ['Hamstrings', 'Glutes'] },
+
+  // ── GLUTES ──
+  { id: 'hip_thrust', name: 'Hip Thrust (DB or Barbell)', sets: 3, repsMin: 10, repsMax: 15, restSeconds: 90, isBuiltIn: true, isCompound: true, muscleGroups: ['Glutes'] },
+  { id: 'cable_pull_through', name: 'Cable Pull-Through', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 90, isBuiltIn: true, isCompound: true, muscleGroups: ['Glutes', 'Hamstrings'] },
+  { id: 'glute_kickback', name: 'Glute Kickback (Cable or Machine)', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: false, muscleGroups: ['Glutes'] },
+  { id: 'adductor_machine', name: 'Adductor Machine', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: false, muscleGroups: ['Glutes'] },
+  { id: 'abductor_machine', name: 'Abductor Machine', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: false, muscleGroups: ['Glutes'] },
+
+  // ── CALVES ──
+  { id: 'standing_calf_raise', name: 'Standing Calf Raise', sets: 4, repsMin: 15, repsMax: 20, restSeconds: 60, isBuiltIn: true, isCompound: false, muscleGroups: ['Calves'] },
+  { id: 'seated_calf_raise', name: 'Seated Calf Raise', sets: 4, repsMin: 15, repsMax: 20, restSeconds: 60, isBuiltIn: true, isCompound: false, muscleGroups: ['Calves'] },
+  { id: 'leg_press_calf_raise', name: 'Leg Press Calf Raise', sets: 3, repsMin: 15, repsMax: 20, restSeconds: 60, isBuiltIn: true, isCompound: false, muscleGroups: ['Calves'] },
+  { id: 'donkey_calf_raise', name: 'Donkey Calf Raise', sets: 3, repsMin: 15, repsMax: 20, restSeconds: 60, isBuiltIn: true, isCompound: false, muscleGroups: ['Calves'] },
+
+  // ── CORE & ACCESSORIES ──
+  { id: 'farmer_carry', name: 'Farmer Carry', sets: 3, repsMin: 30, repsMax: 60, restSeconds: 90, isBuiltIn: true, isCompound: true, isCore: true, muscleGroups: ['Chest', 'Shoulders', 'Triceps', 'Back', 'Biceps', 'Rear Delts', 'Quads', 'Hamstrings', 'Glutes', 'Calves'] },
+  { id: 'dead_hang', name: 'Dead Hang', sets: 3, repsMin: 30, repsMax: 60, restSeconds: 60, isBuiltIn: true, isCompound: false, isCore: true, muscleGroups: ['Chest', 'Shoulders', 'Triceps', 'Back', 'Biceps', 'Rear Delts', 'Quads', 'Hamstrings', 'Glutes', 'Calves'] },
+  { id: 'hanging_leg_raise', name: 'Hanging Leg Raise', sets: 3, repsMin: 10, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: false, isCore: true, muscleGroups: ['Chest', 'Shoulders', 'Triceps', 'Back', 'Biceps', 'Rear Delts', 'Quads', 'Hamstrings', 'Glutes', 'Calves'] },
+  { id: 'ab_wheel', name: 'Ab Wheel Rollout', sets: 3, repsMin: 8, repsMax: 12, restSeconds: 60, isBuiltIn: true, isCompound: true, isCore: true, muscleGroups: ['Chest', 'Shoulders', 'Triceps', 'Back', 'Biceps', 'Rear Delts', 'Quads', 'Hamstrings', 'Glutes', 'Calves'] },
+  { id: 'cable_woodchop', name: 'Cable Woodchop', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: true, isCore: true, muscleGroups: ['Chest', 'Shoulders', 'Triceps', 'Back', 'Biceps', 'Rear Delts', 'Quads', 'Hamstrings', 'Glutes', 'Calves'] },
+  { id: 'plank', name: 'Plank (weighted)', sets: 3, repsMin: 30, repsMax: 60, restSeconds: 60, isBuiltIn: true, isCompound: false, isCore: true, muscleGroups: ['Chest', 'Shoulders', 'Triceps', 'Back', 'Biceps', 'Rear Delts', 'Quads', 'Hamstrings', 'Glutes', 'Calves'] },
+  { id: 'russian_twist', name: 'Russian Twist', sets: 3, repsMin: 15, repsMax: 20, restSeconds: 60, isBuiltIn: true, isCompound: false, isCore: true, muscleGroups: ['Chest', 'Shoulders', 'Triceps', 'Back', 'Biceps', 'Rear Delts', 'Quads', 'Hamstrings', 'Glutes', 'Calves'] },
+  { id: 'cable_crunch', name: 'Cable Crunch', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: false, isCore: true, muscleGroups: ['Chest', 'Shoulders', 'Triceps', 'Back', 'Biceps', 'Rear Delts', 'Quads', 'Hamstrings', 'Glutes', 'Calves'] },
+]

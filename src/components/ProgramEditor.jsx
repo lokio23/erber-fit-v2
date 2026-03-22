@@ -245,26 +245,18 @@ function AddExercisePanel({ onAdd, onCancel, existingIds, dayKey }) {
   const [customRepsMax, setCustomRepsMax] = useState('12')
   const [customRest, setCustomRest] = useState('90')
 
-  // Only show exercises from days sharing muscle groups with the current day
+  // Filter library by muscle groups matching the current day
+  const { program } = useWorkout()
   const relevantExercises = useMemo(() => {
-    const dayMuscles = DEFAULT_PROGRAM[dayKey]?.muscleGroups || []
-    const seen = new Set()
-    const result = []
-    Object.values(DEFAULT_PROGRAM).forEach(day => {
-      if (!day.muscleGroups.some(g => dayMuscles.includes(g))) return
-      day.exercises.forEach(ex => {
-        if (!seen.has(ex.id)) {
-          seen.add(ex.id)
-          result.push(ex)
-        }
-      })
-    })
-    return result
-  }, [dayKey])
+    const dayMuscles = program[dayKey]?.muscleGroups || []
+    return EXERCISE_LIBRARY.filter(ex =>
+      ex.muscleGroups.some(g => dayMuscles.includes(g))
+    )
+  }, [dayKey, program])
 
-  const filtered = relevantExercises.filter(
-    ex => !existingIds.includes(ex.id) && ex.name.toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = relevantExercises
+    .filter(ex => !existingIds.includes(ex.id) && ex.name.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => (a.isCore ? 1 : 0) - (b.isCore ? 1 : 0))
 
   const handleAddCustom = () => {
     if (!customName.trim()) return
@@ -334,10 +326,14 @@ function AddExercisePanel({ onAdd, onCancel, existingIds, dayKey }) {
           <button
             key={ex.id}
             onClick={() => onAdd({ ...ex })}
-            className="w-full text-left px-3 py-2 rounded-lg hover:bg-accent/5 active:opacity-70 transition-colors"
+            className={`w-full text-left px-3 py-2 rounded-lg hover:bg-accent/5 active:opacity-70 transition-colors ${ex.isCore ? 'border border-accent/20 bg-accent/5' : ''}`}
           >
-            <p className="text-xs font-body text-text">{ex.name}</p>
-            <p className="text-[10px] font-mono text-muted">{ex.sets}×{formatRepRange(ex.repsMin, ex.repsMax)}</p>
+            <p className={`text-xs font-body ${ex.isCore ? 'text-accent' : 'text-text'}`}>
+              {ex.isCore ? '⚡ ' : ''}{ex.name}
+            </p>
+            <p className="text-[10px] font-mono text-muted">
+              {ex.isCore ? 'CORE · ' : ''}{ex.sets}×{formatRepRange(ex.repsMin, ex.repsMax)}
+            </p>
           </button>
         ))}
         {filtered.length === 0 && (
