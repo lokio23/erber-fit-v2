@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { Download, Upload, Volume2, VolumeX, Smartphone, Zap, ZapOff, LogOut, Cloud, CloudOff, RefreshCw } from 'lucide-react'
 import { useWorkout } from '../WorkoutContext'
 import { supabase } from '../lib/supabase'
@@ -62,28 +62,20 @@ export default function Settings() {
           <SettingCard>
             {user ? (
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    {user.user_metadata?.avatar_url ? (
-                      <img src={user.user_metadata.avatar_url} alt="" className="w-8 h-8 rounded-full" referrerPolicy="no-referrer" />
-                    ) : (
-                      <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center">
-                        <span className="text-xs font-mono text-accent">{user.email?.[0]?.toUpperCase()}</span>
-                      </div>
-                    )}
-                    <div>
-                      <p className="text-sm font-body font-medium text-text">{user.user_metadata?.full_name || user.email}</p>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        {syncStatus === 'synced' && <Cloud size={10} className="text-accent" />}
-                        {syncStatus === 'syncing' && <RefreshCw size={10} className="text-accent animate-spin" />}
-                        {syncStatus === 'error' && <CloudOff size={10} className="text-accent-secondary" />}
-                        <p className="text-[10px] font-mono text-muted">
-                          {syncStatus === 'synced' && 'Synced'}
-                          {syncStatus === 'syncing' && 'Syncing...'}
-                          {syncStatus === 'error' && 'Sync error'}
-                          {syncStatus === 'idle' && 'Cloud backup'}
-                        </p>
-                      </div>
+                <div className="flex items-center gap-2.5">
+                  <Cloud size={16} className="text-accent" />
+                  <div>
+                    <p className="text-sm font-body font-medium text-text">Cloud Backup</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      {syncStatus === 'synced' && <Cloud size={10} className="text-accent" />}
+                      {syncStatus === 'syncing' && <RefreshCw size={10} className="text-accent animate-spin" />}
+                      {syncStatus === 'error' && <CloudOff size={10} className="text-accent-secondary" />}
+                      <p className="text-[10px] font-mono text-muted">
+                        {syncStatus === 'synced' && 'Synced'}
+                        {syncStatus === 'syncing' && 'Syncing...'}
+                        {syncStatus === 'error' && 'Sync error'}
+                        {syncStatus === 'idle' && 'Connected'}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -96,18 +88,7 @@ export default function Settings() {
                 </button>
               </div>
             ) : (
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm font-body font-medium text-text">Cloud Backup</p>
-                  <p className="text-xs font-mono text-muted mt-0.5">Sign in to sync your data across devices</p>
-                </div>
-                <button
-                  onClick={signIn}
-                  className="w-full py-2.5 rounded-lg bg-accent/10 border border-accent/20 text-xs font-mono text-accent hover:bg-accent/20 active:opacity-70 transition-colors"
-                >
-                  Sign in with Google
-                </button>
-              </div>
+              <SettingsPinLogin signIn={signIn} />
             )}
           </SettingCard>
         )}
@@ -307,5 +288,50 @@ function Toggle({ checked, onChange }) {
         style={{ background: 'radial-gradient(circle at 35% 35%, #ffffff, #e8e8e8)' }}
       />
     </button>
+  )
+}
+
+function SettingsPinLogin({ signIn }) {
+  const [pin, setPin] = useState('')
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!pin.trim()) return
+    setSubmitting(true)
+    setError('')
+    const result = await signIn(pin.trim())
+    if (result?.error) {
+      setError(result.error)
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      <div>
+        <p className="text-sm font-body font-medium text-text">Cloud Backup</p>
+        <p className="text-xs font-mono text-muted mt-0.5">Enter a PIN to sync your data</p>
+      </div>
+      <form onSubmit={handleSubmit} className="flex gap-2">
+        <input
+          type="text"
+          inputMode="numeric"
+          value={pin}
+          onChange={(e) => setPin(e.target.value)}
+          placeholder="Enter PIN"
+          className="flex-1 bg-bg border border-border rounded-lg px-3 py-2 text-sm font-mono text-text text-center focus:outline-none focus:border-accent/50"
+        />
+        <button
+          type="submit"
+          disabled={submitting}
+          className="px-4 py-2 rounded-lg bg-accent/10 border border-accent/20 text-xs font-mono text-accent hover:bg-accent/20 active:opacity-70 transition-colors disabled:opacity-50"
+        >
+          {submitting ? '...' : 'Sync'}
+        </button>
+      </form>
+      {error && <p className="text-xs font-mono text-red-400">{error}</p>}
+    </div>
   )
 }
