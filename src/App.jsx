@@ -34,9 +34,9 @@ export default function App() {
     <WorkoutProvider>
       <div className="flex flex-col min-h-dvh bg-bg">
         {/* Header */}
-        <header className="flex items-center justify-between px-5 pt-[env(safe-area-inset-top)] bg-bg border-b border-border">
+        <header className="flex items-center justify-between px-5 pt-[env(safe-area-inset-top)] bg-bg border-b border-transparent" style={{ boxShadow: '0 1px 0 0 rgba(232,255,71,0.12)' }}>
           <div className="py-4">
-            <h1 className="font-display text-2xl tracking-wider text-accent leading-none">
+            <h1 className="font-display text-2xl tracking-wider text-accent leading-none" style={{ textShadow: '0 0 20px rgba(232,255,71,0.4), 0 0 8px rgba(232,255,71,0.2)' }}>
               ERBER FIT
             </h1>
           </div>
@@ -75,6 +75,7 @@ export default function App() {
                   className={`flex flex-col items-center gap-1 px-4 py-2 transition-colors ${
                     isActive ? 'text-accent' : 'text-muted'
                   }`}
+                  style={isActive ? { filter: 'drop-shadow(0 0 6px rgba(232,255,71,0.5))' } : undefined}
                 >
                   <Icon size={22} strokeWidth={isActive ? 2.5 : 1.5} />
                   <span className="text-[10px] font-medium tracking-wide uppercase">

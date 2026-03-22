@@ -40,9 +40,11 @@ function injectAnimationStyles() {
   document.head.appendChild(style)
 }
 
+// Inject animation styles once at module load (not inside render)
+injectAnimationStyles()
+
 export default function ExerciseCard({ exercise, sessionExercise, sessionId, onSetLogged, readOnly }) {
-  injectAnimationStyles()
-  const { sessions, logSet, updateExerciseNotes, removeSet } = useWorkout()
+  const { sessions, settings, logSet, updateExerciseNotes, removeSet } = useWorkout()
   const [showNotes, setShowNotes] = useState(!!sessionExercise?.notes)
 
   const lastWeight = useMemo(
@@ -107,7 +109,8 @@ export default function ExerciseCard({ exercise, sessionExercise, sessionId, onS
   return (
     <div className={`relative rounded-xl border transition-colors ${
       justCompleted ? 'animate-electric-glow' : ''
-    } ${allSetsComplete ? 'bg-card/50 border-accent/20' : 'bg-card border-border'}`}>
+    } ${allSetsComplete ? 'bg-card/50 border-accent/20' : 'bg-card border-border'}`}
+      style={allSetsComplete && !justCompleted ? { boxShadow: '0 0 0 1px rgba(232,255,71,0.08), inset 0 1px 0 rgba(232,255,71,0.06)', background: 'linear-gradient(145deg, rgba(232,255,71,0.04), rgba(22,24,25,0.5) 60%)' } : undefined}>
       {/* Flash overlay */}
       {justCompleted && (
         <div className="absolute inset-0 rounded-xl bg-accent animate-card-flash pointer-events-none z-10" />
@@ -183,6 +186,7 @@ export default function ExerciseCard({ exercise, sessionExercise, sessionId, onS
                 isPR={completed ? isPRSet(completed) : false}
                 onLog={(weight, reps) => handleLogSet(weight, reps)}
                 onRemove={() => handleRemoveSet(i)}
+                unit={settings.unit}
               />
             )
           })}

@@ -37,34 +37,31 @@ export default function useWorkoutSession() {
     const dayKey = getDayKey()
     const todayStr = getTodayStr()
     const id = `${todayStr}_${dayKey}`
-
-    const existing = sessions.find(s => s.id === id)
-    if (existing) return existing
-
     const workout = program[dayKey]
-    const newSession = {
-      id,
-      date: todayStr,
-      dayKey,
-      workoutName: workout.name,
-      exercises: workout.exercises.map(ex => ({
-        exerciseId: ex.id,
-        name: ex.name,
-        targetSets: ex.sets,
-        targetRepsMin: ex.repsMin,
-        targetRepsMax: ex.repsMax,
-        restSeconds: ex.restSeconds,
-        isCompound: ex.isCompound,
-        sets: [],
-        notes: '',
-      })),
-      startedAt: new Date().toISOString(),
-      completedAt: null,
-    }
 
-    setSessions(prev => [...prev, newSession])
-    return newSession
-  }, [program, sessions, setSessions, getDayKey])
+    setSessions(prev => {
+      if (prev.find(s => s.id === id)) return prev
+      return [...prev, {
+        id,
+        date: todayStr,
+        dayKey,
+        workoutName: workout.name,
+        exercises: workout.exercises.map(ex => ({
+          exerciseId: ex.id,
+          name: ex.name,
+          targetSets: ex.sets,
+          targetRepsMin: ex.repsMin,
+          targetRepsMax: ex.repsMax,
+          restSeconds: ex.restSeconds,
+          isCompound: ex.isCompound,
+          sets: [],
+          notes: '',
+        })),
+        startedAt: new Date().toISOString(),
+        completedAt: null,
+      }]
+    })
+  }, [program, setSessions, getDayKey])
 
   const logSet = useCallback((sessionId, exerciseId, weight, reps) => {
     setSessions(prev => prev.map(session => {

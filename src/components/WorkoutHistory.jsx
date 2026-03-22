@@ -37,13 +37,13 @@ export default function WorkoutHistory() {
         <div className="flex bg-bg border border-border rounded-lg overflow-hidden">
           <button
             onClick={() => setView('list')}
-            className={`p-2 transition-colors ${view === 'list' ? 'bg-accent/10 text-accent' : 'text-muted'}`}
+            className={`p-2 transition-colors active:opacity-70 ${view === 'list' ? 'bg-accent/10 text-accent' : 'text-muted'}`}
           >
             <List size={16} />
           </button>
           <button
             onClick={() => setView('calendar')}
-            className={`p-2 transition-colors ${view === 'calendar' ? 'bg-accent/10 text-accent' : 'text-muted'}`}
+            className={`p-2 transition-colors active:opacity-70 ${view === 'calendar' ? 'bg-accent/10 text-accent' : 'text-muted'}`}
           >
             <Calendar size={16} />
           </button>
@@ -90,14 +90,17 @@ function SessionRow({ session, expanded, onToggle, unit }) {
     <div className="bg-card border border-border rounded-xl overflow-hidden">
       <button
         onClick={onToggle}
-        className="w-full flex items-center gap-3 px-4 py-3.5 text-left"
+        className="w-full flex items-center gap-3 px-4 py-3.5 text-left active:opacity-70"
       >
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-sm font-body font-semibold text-text truncate">
               {session.workoutName}
             </span>
-            <span className={`w-2 h-2 rounded-full shrink-0 ${isComplete ? 'bg-accent' : 'bg-accent-secondary'}`} />
+            <span
+              className={`w-2 h-2 rounded-full shrink-0 ${isComplete ? 'bg-accent' : 'bg-accent-secondary'}`}
+              style={isComplete ? { boxShadow: '0 0 6px rgba(232,255,71,0.7), 0 0 12px rgba(232,255,71,0.3)' } : { boxShadow: '0 0 6px rgba(255,107,53,0.7), 0 0 12px rgba(255,107,53,0.3)' }}
+            />
           </div>
           <p className="text-xs font-mono text-muted mt-0.5">{formatDate(session.date)}</p>
         </div>
@@ -172,11 +175,11 @@ function CalendarView({ sessions, month, onMonthChange, onSelectDate }) {
     <div className="px-5">
       {/* Month nav */}
       <div className="flex items-center justify-between mb-4">
-        <button onClick={prevMonth} className="p-2 text-muted hover:text-text transition-colors">
+        <button onClick={prevMonth} className="p-2 text-muted hover:text-text transition-colors active:opacity-70">
           <ChevronLeft size={18} />
         </button>
         <span className="font-display text-lg tracking-wider text-text">{monthName.toUpperCase()}</span>
-        <button onClick={nextMonth} className="p-2 text-muted hover:text-text transition-colors">
+        <button onClick={nextMonth} className="p-2 text-muted hover:text-text transition-colors active:opacity-70">
           <ChevronRight size={18} />
         </button>
       </div>
@@ -203,15 +206,18 @@ function CalendarView({ sessions, month, onMonthChange, onSelectDate }) {
             <button
               key={day}
               onClick={() => status && onSelectDate(dateStr)}
-              className={`relative flex flex-col items-center py-2 rounded-lg transition-colors ${
+              className={`relative flex flex-col items-center py-2 rounded-lg transition-colors active:opacity-70 ${
                 status ? 'hover:bg-card cursor-pointer' : 'cursor-default'
               }`}
             >
               <span className="text-xs font-mono text-text/70">{day}</span>
               {status && (
-                <span className={`w-1.5 h-1.5 rounded-full mt-1 ${
-                  status === 'complete' ? 'bg-accent' : 'bg-accent-secondary'
-                }`} />
+                <span
+                  className={`w-1.5 h-1.5 rounded-full mt-1 ${
+                    status === 'complete' ? 'bg-accent' : 'bg-accent-secondary'
+                  }`}
+                  style={status === 'complete' ? { boxShadow: '0 0 4px rgba(232,255,71,0.8), 0 0 8px rgba(232,255,71,0.4)' } : { boxShadow: '0 0 4px rgba(255,107,53,0.8), 0 0 8px rgba(255,107,53,0.4)' }}
+                />
               )}
             </button>
           )

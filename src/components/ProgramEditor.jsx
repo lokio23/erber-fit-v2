@@ -1,14 +1,16 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { ArrowUp, ArrowDown, Trash2, Plus, RotateCcw, X, Search } from 'lucide-react'
 import { useWorkout } from '../WorkoutContext'
 import { DEFAULT_PROGRAM, EXERCISE_LIBRARY } from '../data/workouts'
 import { formatRepRange, formatRestTime } from '../utils/calculations'
+import ConfirmDialog from './ConfirmDialog'
 
 export default function ProgramEditor({ dayKey, onClose }) {
   const { program, setProgram } = useWorkout()
   const workout = program[dayKey]
   const [addingExercise, setAddingExercise] = useState(false)
   const [editingIndex, setEditingIndex] = useState(null)
+  const [confirmAction, setConfirmAction] = useState(null)
 
   const updateExercises = (newExercises) => {
     setProgram(prev => ({
@@ -26,16 +28,11 @@ export default function ProgramEditor({ dayKey, onClose }) {
   }
 
   const removeExercise = (index) => {
-    if (!confirm(`Remove "${workout.exercises[index].name}"?`)) return
-    updateExercises(workout.exercises.filter((_, i) => i !== index))
+    setConfirmAction({ type: 'remove', index })
   }
 
   const resetToDefault = () => {
-    if (!confirm('Reset this day to the default program?')) return
-    setProgram(prev => ({
-      ...prev,
-      [dayKey]: DEFAULT_PROGRAM[dayKey],
-    }))
+    setConfirmAction({ type: 'reset' })
   }
 
   const addExercise = (exercise) => {
@@ -57,7 +54,7 @@ export default function ProgramEditor({ dayKey, onClose }) {
           <h2 className="font-display text-xl tracking-wider text-text">EDIT WORKOUT</h2>
           <p className="text-xs font-mono text-muted mt-0.5">{workout.name}</p>
         </div>
-        <button onClick={onClose} className="p-2 text-muted hover:text-text transition-colors">
+        <button onClick={onClose} className="p-2 text-muted hover:text-text active:opacity-70 transition-colors">
           <X size={20} />
         </button>
       </div>
@@ -81,14 +78,14 @@ export default function ProgramEditor({ dayKey, onClose }) {
                   <button
                     onClick={() => moveExercise(index, -1)}
                     disabled={index === 0}
-                    className="p-1 text-muted hover:text-text disabled:opacity-20 transition-colors"
+                    className="p-2.5 text-muted hover:text-text disabled:opacity-20 active:opacity-70 transition-colors"
                   >
                     <ArrowUp size={12} />
                   </button>
                   <button
                     onClick={() => moveExercise(index, 1)}
                     disabled={index === workout.exercises.length - 1}
-                    className="p-1 text-muted hover:text-text disabled:opacity-20 transition-colors"
+                    className="p-2.5 text-muted hover:text-text disabled:opacity-20 active:opacity-70 transition-colors"
                   >
                     <ArrowDown size={12} />
                   </button>
@@ -110,7 +107,7 @@ export default function ProgramEditor({ dayKey, onClose }) {
                 {/* Delete */}
                 <button
                   onClick={() => removeExercise(index)}
-                  className="p-2 text-muted hover:text-accent-secondary transition-colors shrink-0"
+                  className="p-2 text-muted hover:text-accent-secondary active:opacity-70 transition-colors shrink-0"
                 >
                   <Trash2 size={14} />
                 </button>
@@ -125,11 +122,12 @@ export default function ProgramEditor({ dayKey, onClose }) {
             onAdd={addExercise}
             onCancel={() => setAddingExercise(false)}
             existingIds={workout.exercises.map(e => e.id)}
+            dayKey={dayKey}
           />
         ) : (
           <button
             onClick={() => setAddingExercise(true)}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-accent/30 text-accent text-xs font-mono uppercase tracking-wider hover:bg-accent/5 transition-colors"
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-accent/30 text-accent text-xs font-mono uppercase tracking-wider hover:bg-accent/5 active:opacity-70 transition-colors"
           >
             <Plus size={14} /> Add Exercise
           </button>
@@ -138,11 +136,42 @@ export default function ProgramEditor({ dayKey, onClose }) {
         {/* Reset to default */}
         <button
           onClick={resetToDefault}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-border text-muted text-xs font-mono uppercase tracking-wider hover:text-text hover:border-border transition-colors mt-4"
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-border text-muted text-xs font-mono uppercase tracking-wider hover:text-text hover:border-border active:opacity-70 transition-colors mt-4"
         >
           <RotateCcw size={14} /> Reset to Default
         </button>
       </div>
+
+      {confirmAction?.type === 'remove' && (
+        <ConfirmDialog
+          title="Remove Exercise"
+          message={`Remove "${workout.exercises[confirmAction.index].name}" from this workout?`}
+          confirmLabel="Remove"
+          danger
+          onConfirm={() => {
+            updateExercises(workout.exercises.filter((_, i) => i !== confirmAction.index))
+            setConfirmAction(null)
+          }}
+          onCancel={() => setConfirmAction(null)}
+        />
+      )}
+
+      {confirmAction?.type === 'reset' && (
+        <ConfirmDialog
+          title="Reset to Default"
+          message="Reset this day to the default program? Your customizations will be lost."
+          confirmLabel="Reset"
+          danger
+          onConfirm={() => {
+            setProgram(prev => ({
+              ...prev,
+              [dayKey]: DEFAULT_PROGRAM[dayKey],
+            }))
+            setConfirmAction(null)
+          }}
+          onCancel={() => setConfirmAction(null)}
+        />
+      )}
     </div>
   )
 }
@@ -196,10 +225,10 @@ function ExerciseEditForm({ exercise, onSave, onCancel }) {
         </div>
       </div>
       <div className="flex gap-2">
-        <button onClick={onCancel} className="flex-1 py-2 rounded-lg bg-bg border border-border text-xs font-mono text-muted hover:text-text transition-colors">
+        <button onClick={onCancel} className="flex-1 py-2 rounded-lg bg-bg border border-border text-xs font-mono text-muted hover:text-text active:opacity-70 transition-colors">
           Cancel
         </button>
-        <button onClick={handleSave} className="flex-1 py-2 rounded-lg bg-accent/10 border border-accent/20 text-xs font-mono text-accent hover:bg-accent/20 transition-colors">
+        <button onClick={handleSave} className="flex-1 py-2 rounded-lg bg-accent/10 border border-accent/20 text-xs font-mono text-accent hover:bg-accent/20 active:opacity-70 transition-colors">
           Save
         </button>
       </div>
@@ -207,7 +236,7 @@ function ExerciseEditForm({ exercise, onSave, onCancel }) {
   )
 }
 
-function AddExercisePanel({ onAdd, onCancel, existingIds }) {
+function AddExercisePanel({ onAdd, onCancel, existingIds, dayKey }) {
   const [search, setSearch] = useState('')
   const [customMode, setCustomMode] = useState(false)
   const [customName, setCustomName] = useState('')
@@ -216,7 +245,24 @@ function AddExercisePanel({ onAdd, onCancel, existingIds }) {
   const [customRepsMax, setCustomRepsMax] = useState('12')
   const [customRest, setCustomRest] = useState('90')
 
-  const filtered = EXERCISE_LIBRARY.filter(
+  // Only show exercises from days sharing muscle groups with the current day
+  const relevantExercises = useMemo(() => {
+    const dayMuscles = DEFAULT_PROGRAM[dayKey]?.muscleGroups || []
+    const seen = new Set()
+    const result = []
+    Object.values(DEFAULT_PROGRAM).forEach(day => {
+      if (!day.muscleGroups.some(g => dayMuscles.includes(g))) return
+      day.exercises.forEach(ex => {
+        if (!seen.has(ex.id)) {
+          seen.add(ex.id)
+          result.push(ex)
+        }
+      })
+    })
+    return result
+  }, [dayKey])
+
+  const filtered = relevantExercises.filter(
     ex => !existingIds.includes(ex.id) && ex.name.toLowerCase().includes(search.toLowerCase())
   )
 
@@ -263,8 +309,8 @@ function AddExercisePanel({ onAdd, onCancel, existingIds }) {
           </div>
         </div>
         <div className="flex gap-2">
-          <button onClick={onCancel} className="flex-1 py-2 rounded-lg bg-bg border border-border text-xs font-mono text-muted">Cancel</button>
-          <button onClick={handleAddCustom} disabled={!customName.trim()} className="flex-1 py-2 rounded-lg bg-accent/10 border border-accent/20 text-xs font-mono text-accent disabled:opacity-30">Add</button>
+          <button onClick={onCancel} className="flex-1 py-2 rounded-lg bg-bg border border-border text-xs font-mono text-muted active:opacity-70">Cancel</button>
+          <button onClick={handleAddCustom} disabled={!customName.trim()} className="flex-1 py-2 rounded-lg bg-accent/10 border border-accent/20 text-xs font-mono text-accent disabled:opacity-30 active:opacity-70">Add</button>
         </div>
       </div>
     )
@@ -288,7 +334,7 @@ function AddExercisePanel({ onAdd, onCancel, existingIds }) {
           <button
             key={ex.id}
             onClick={() => onAdd({ ...ex })}
-            className="w-full text-left px-3 py-2 rounded-lg hover:bg-accent/5 transition-colors"
+            className="w-full text-left px-3 py-2 rounded-lg hover:bg-accent/5 active:opacity-70 transition-colors"
           >
             <p className="text-xs font-body text-text">{ex.name}</p>
             <p className="text-[10px] font-mono text-muted">{ex.sets}×{formatRepRange(ex.repsMin, ex.repsMax)}</p>
@@ -299,8 +345,8 @@ function AddExercisePanel({ onAdd, onCancel, existingIds }) {
         )}
       </div>
       <div className="flex gap-2 border-t border-border pt-3">
-        <button onClick={onCancel} className="flex-1 py-2 rounded-lg bg-bg border border-border text-xs font-mono text-muted">Cancel</button>
-        <button onClick={() => setCustomMode(true)} className="flex-1 py-2 rounded-lg bg-accent/10 border border-accent/20 text-xs font-mono text-accent">Custom</button>
+        <button onClick={onCancel} className="flex-1 py-2 rounded-lg bg-bg border border-border text-xs font-mono text-muted active:opacity-70">Cancel</button>
+        <button onClick={() => setCustomMode(true)} className="flex-1 py-2 rounded-lg bg-accent/10 border border-accent/20 text-xs font-mono text-accent active:opacity-70">Custom</button>
       </div>
     </div>
   )

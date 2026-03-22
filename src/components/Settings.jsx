@@ -118,10 +118,7 @@ export default function Settings() {
                 </div>
               </div>
               <button
-                onClick={() => {
-                  update('deloadActiveUntil', null)
-                  update('lastDeloadDate', getTodayStr())
-                }}
+                onClick={() => setSettings(prev => ({ ...prev, deloadActiveUntil: null, lastDeloadDate: getTodayStr() }))}
                 className="w-full py-2 rounded-lg border border-accent-secondary/30 text-xs font-mono text-accent-secondary hover:bg-accent-secondary/5 transition-colors"
               >
                 End Deload Early
@@ -151,8 +148,7 @@ export default function Settings() {
                   if (confirm('Start a deload week? All exercises will show half the normal sets for 7 days.')) {
                     const end = new Date()
                     end.setDate(end.getDate() + 7)
-                    update('deloadActiveUntil', end.toISOString().split('T')[0])
-                    update('lastDeloadDate', getTodayStr())
+                    setSettings(prev => ({ ...prev, deloadActiveUntil: end.toISOString().split('T')[0], lastDeloadDate: getTodayStr() }))
                   }
                 }}
                 className="mt-3 w-full py-2.5 rounded-lg bg-accent-secondary/10 border border-accent-secondary/20 text-xs font-mono text-accent-secondary hover:bg-accent-secondary/20 transition-colors"
@@ -240,15 +236,19 @@ function SettingCard({ children }) {
 function Toggle({ checked, onChange }) {
   return (
     <button
+      role="switch"
+      aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className={`relative w-10 h-5.5 rounded-full transition-colors ${
-        checked ? 'bg-accent' : 'bg-border'
+      className={`relative w-10 h-5.5 rounded-full transition-colors active:opacity-70 ${
+        checked ? '' : 'bg-border'
       }`}
+      style={checked ? { background: 'linear-gradient(to right, #c8dd35, #e8ff47)', boxShadow: '0 0 8px rgba(232,255,71,0.35), inset 0 1px 2px rgba(255,255,255,0.1)' } : undefined}
     >
       <span
-        className={`absolute top-0.5 w-4.5 h-4.5 rounded-full bg-bg shadow transition-transform ${
+        className={`absolute top-0.5 w-4.5 h-4.5 rounded-full shadow transition-transform ${
           checked ? 'translate-x-5' : 'translate-x-0.5'
         }`}
+        style={{ background: 'radial-gradient(circle at 35% 35%, #ffffff, #e8e8e8)' }}
       />
     </button>
   )

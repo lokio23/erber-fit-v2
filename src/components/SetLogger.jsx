@@ -10,6 +10,7 @@ export default function SetLogger({
   isPR,
   onLog,
   onRemove,
+  unit = 'lbs',
 }) {
   const [weight, setWeight] = useState(completedSet?.weight?.toString() || lastWeight?.toString() || '')
   const [reps, setReps] = useState(completedSet?.reps?.toString() || '')
@@ -17,9 +18,14 @@ export default function SetLogger({
   const isCompleted = !!completedSet
 
   const handleLog = () => {
-    if (!weight || !reps) return
-    onLog(Number(weight), Number(reps))
-    // Don't reset - keep values visible
+    const w = Number(weight)
+    const r = Number(reps)
+    if (!w || !r || w <= 0 || r <= 0) return
+    onLog(w, r)
+  }
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') handleLog()
   }
 
   if (isCompleted) {
@@ -29,14 +35,14 @@ export default function SetLogger({
           {setNumber}
         </span>
         <span className="text-sm font-mono text-text flex-1">
-          {completedSet.weight} lbs × {completedSet.reps}
+          {completedSet.weight} {unit} × {completedSet.reps}
         </span>
         {isPR && (
           <span className="text-[10px] font-mono font-bold text-bg bg-accent px-1.5 py-0.5 rounded uppercase tracking-wider animate-pulse">
             PR!
           </span>
         )}
-        <button onClick={onRemove} className="text-muted hover:text-accent-secondary transition-colors p-1">
+        <button onClick={onRemove} className="text-muted hover:text-accent-secondary active:opacity-70 transition-colors p-2.5 -m-1" aria-label="Remove set">
           <X size={14} />
         </button>
         <Check size={16} className="text-accent shrink-0" />
@@ -53,25 +59,31 @@ export default function SetLogger({
         <input
           type="number"
           inputMode="decimal"
-          placeholder={lastWeight ? String(lastWeight) : 'lbs'}
+          enterKeyHint="next"
+          placeholder={lastWeight ? String(lastWeight) : unit}
           value={weight}
           onChange={e => setWeight(e.target.value)}
+          aria-label={`Weight in ${unit}`}
           className="w-16 bg-bg border border-border rounded px-2 py-1.5 text-sm font-mono text-text placeholder:text-muted/50 focus:outline-none focus:border-accent/50 text-center"
         />
         <span className="text-muted text-xs">×</span>
         <input
           type="number"
           inputMode="numeric"
+          enterKeyHint="done"
           placeholder={targetRepsMin === targetRepsMax ? String(targetRepsMin) : `${targetRepsMin}-${targetRepsMax}`}
           value={reps}
           onChange={e => setReps(e.target.value)}
+          onKeyDown={handleKeyDown}
+          aria-label="Reps"
           className="w-16 bg-bg border border-border rounded px-2 py-1.5 text-sm font-mono text-text placeholder:text-muted/50 focus:outline-none focus:border-accent/50 text-center"
         />
       </div>
       <button
         onClick={handleLog}
         disabled={!weight || !reps}
-        className="p-1.5 rounded-md bg-accent/10 text-accent disabled:opacity-20 disabled:cursor-not-allowed hover:bg-accent/20 transition-colors"
+        className="p-2.5 rounded-md bg-accent/10 text-accent disabled:opacity-20 disabled:cursor-not-allowed hover:bg-accent/20 active:opacity-70 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+        aria-label="Log set"
       >
         <Check size={16} />
       </button>
