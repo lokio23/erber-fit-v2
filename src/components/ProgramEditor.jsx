@@ -184,12 +184,16 @@ function ExerciseEditForm({ exercise, onSave, onCancel }) {
   const [restSeconds, setRestSeconds] = useState(String(exercise.restSeconds))
 
   const handleSave = () => {
+    const s = Number(sets)
+    const rMin = Number(repsMin)
+    const rMax = Number(repsMax)
+    const rest = Number(restSeconds)
     onSave({
       name: name.trim() || exercise.name,
-      sets: Number(sets) || exercise.sets,
-      repsMin: Number(repsMin) || exercise.repsMin,
-      repsMax: Number(repsMax) || exercise.repsMax,
-      restSeconds: Number(restSeconds) || exercise.restSeconds,
+      sets: s > 0 ? s : exercise.sets,
+      repsMin: rMin > 0 ? rMin : exercise.repsMin,
+      repsMax: rMax > 0 ? rMax : exercise.repsMax,
+      restSeconds: rest > 0 ? rest : exercise.restSeconds,
     })
   }
 

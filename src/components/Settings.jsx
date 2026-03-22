@@ -1,12 +1,14 @@
 import { useRef, useState } from 'react'
-import { Download, Upload, Volume2, VolumeX, Smartphone, Zap, ZapOff, LogOut, Cloud, CloudOff, RefreshCw } from 'lucide-react'
+import { Download, Upload, Volume2, VolumeX, Smartphone, Zap, LogOut, Cloud, CloudOff, RefreshCw, WifiOff } from 'lucide-react'
 import { useWorkout } from '../WorkoutContext'
 import { supabase } from '../lib/supabase'
 import { getWeeksSinceDate, isDeloadActive, getTodayStr, formatDate } from '../utils/calculations'
+import ConfirmDialog from './ConfirmDialog'
 
 export default function Settings() {
   const { settings, setSettings, program, sessions, setProgram, setSessions, user, signIn, signOut, syncStatus } = useWorkout()
   const fileInputRef = useRef(null)
+  const [showDeloadConfirm, setShowDeloadConfirm] = useState(false)
 
   const deloadActive = isDeloadActive(settings)
   const weeksSinceDeload = getWeeksSinceDate(settings.lastDeloadDate || sessions[0]?.date)
@@ -35,11 +37,19 @@ export default function Settings() {
     reader.onload = (ev) => {
       try {
         const data = JSON.parse(ev.target.result)
-        if (data.erberfit_program) setProgram(data.erberfit_program)
-        if (data.erberfit_sessions) setSessions(data.erberfit_sessions)
-        if (data.erberfit_settings) setSettings(data.erberfit_settings)
+        // Validate structure
+        const hasProgram = data.erberfit_program && typeof data.erberfit_program === 'object'
+        const hasSessions = Array.isArray(data.erberfit_sessions)
+        const hasSettings = data.erberfit_settings && typeof data.erberfit_settings === 'object'
+        if (!hasProgram && !hasSessions && !hasSettings) {
+          alert('This file doesn\'t contain valid Erber Fit data.')
+          return
+        }
+        if (hasProgram) setProgram(data.erberfit_program)
+        if (hasSessions) setSessions(data.erberfit_sessions)
+        if (hasSettings) setSettings(data.erberfit_settings)
       } catch {
-        alert('Invalid backup file.')
+        alert('Invalid backup file — could not parse JSON.')
       }
     }
     reader.readAsText(file)
@@ -70,10 +80,12 @@ export default function Settings() {
                       {syncStatus === 'synced' && <Cloud size={10} className="text-accent" />}
                       {syncStatus === 'syncing' && <RefreshCw size={10} className="text-accent animate-spin" />}
                       {syncStatus === 'error' && <CloudOff size={10} className="text-accent-secondary" />}
+                      {syncStatus === 'offline' && <WifiOff size={10} className="text-yellow-400" />}
                       <p className="text-[10px] font-mono text-muted">
                         {syncStatus === 'synced' && 'Synced'}
                         {syncStatus === 'syncing' && 'Syncing...'}
                         {syncStatus === 'error' && 'Sync error'}
+                        {syncStatus === 'offline' && 'Offline — will sync when connected'}
                         {syncStatus === 'idle' && 'Connected'}
                       </p>
                     </div>
@@ -181,13 +193,7 @@ export default function Settings() {
                 />
               </div>
               <button
-                onClick={() => {
-                  if (confirm('Start a deload week? All exercises will show half the normal sets for 7 days.')) {
-                    const end = new Date()
-                    end.setDate(end.getDate() + 7)
-                    setSettings(prev => ({ ...prev, deloadActiveUntil: end.toISOString().split('T')[0], lastDeloadDate: getTodayStr() }))
-                  }
-                }}
+                onClick={() => setShowDeloadConfirm(true)}
                 className="mt-3 w-full py-2.5 rounded-lg bg-accent-secondary/10 border border-accent-secondary/20 text-xs font-mono text-accent-secondary hover:bg-accent-secondary/20 transition-colors"
               >
                 Start Deload Week
@@ -258,6 +264,21 @@ export default function Settings() {
           <p className="text-[10px] font-mono text-muted/40 mt-1">v1.0.0</p>
         </div>
       </div>
+
+      {showDeloadConfirm && (
+        <ConfirmDialog
+          title="Start Deload Week"
+          message="All exercises will show half the normal sets for 7 days. This helps your muscles recover and come back stronger."
+          confirmLabel="Start Deload"
+          onConfirm={() => {
+            const end = new Date()
+            end.setDate(end.getDate() + 7)
+            setSettings(prev => ({ ...prev, deloadActiveUntil: end.toISOString().split('T')[0], lastDeloadDate: getTodayStr() }))
+            setShowDeloadConfirm(false)
+          }}
+          onCancel={() => setShowDeloadConfirm(false)}
+        />
+      )}
     </div>
   )
 }

@@ -3,7 +3,7 @@ import { MessageSquare } from 'lucide-react'
 import SetLogger from './SetLogger'
 import FormGuide from './FormGuide'
 import { useWorkout } from '../WorkoutContext'
-import { formatRepRange, formatRestTime, findPR, checkProgressiveOverload, getLastSessionWeight } from '../utils/calculations'
+import { formatRepRange, formatRestTime, findPR, isWeightStagnant, getLastSessionWeight } from '../utils/calculations'
 
 let stylesInjected = false
 function injectAnimationStyles() {
@@ -58,7 +58,7 @@ export default function ExerciseCard({ exercise, sessionExercise, sessionId, onS
   )
 
   const needsOverload = useMemo(
-    () => readOnly ? false : checkProgressiveOverload(sessions, exercise.id),
+    () => readOnly ? false : isWeightStagnant(sessions, exercise.id),
     [sessions, exercise.id, readOnly]
   )
 
