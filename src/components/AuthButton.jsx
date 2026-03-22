@@ -2,10 +2,9 @@ import { useWorkout } from '../WorkoutContext'
 import { supabase } from '../lib/supabase'
 
 export default function AuthButton() {
-  if (!supabase) return null
-
   const { user, loading, signIn } = useWorkout()
 
+  if (!supabase) return null
   if (loading) return null
 
   if (user) {
