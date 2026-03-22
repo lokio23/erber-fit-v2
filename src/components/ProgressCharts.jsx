@@ -1,29 +1,26 @@
 import { useState, useMemo } from 'react'
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { TrendingUp, Trophy, BarChart3 } from 'lucide-react'
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts'
+import { TrendingUp, TrendingDown, Minus, Trophy, Flame, Dumbbell, Target } from 'lucide-react'
 import { useWorkout } from '../WorkoutContext'
-import { findPR, displayWeight, formatDate } from '../utils/calculations'
+import { EXERCISE_LIBRARY } from '../data/workouts'
+import {
+  findPR, displayWeight, formatDate, calcEstimated1RM,
+  calcSetsPerMuscleGroup, calcWeeklyTotalSets, calcWorkoutsThisWeek,
+  calcStreak, daysSince, countCompletedSets,
+} from '../utils/calculations'
+
+const TOOLTIP_STYLE = {
+  backgroundColor: '#161819',
+  border: '1px solid #222527',
+  borderRadius: '8px',
+  fontSize: '12px',
+  fontFamily: 'DM Mono',
+}
+
+const MUSCLE_GROUP_ORDER = ['Chest', 'Back', 'Shoulders', 'Quads', 'Hamstrings', 'Glutes', 'Biceps', 'Triceps', 'Rear Delts', 'Calves']
 
 export default function ProgressCharts() {
   const { sessions, program, settings } = useWorkout()
-  const [activeSection, setActiveSection] = useState('exercise')
-  const [selectedExercise, setSelectedExercise] = useState('')
-
-  // Get all unique exercises ever logged
-  const allExercises = useMemo(() => {
-    const map = new Map()
-    sessions.forEach(s => {
-      s.exercises.forEach(ex => {
-        if (!map.has(ex.exerciseId)) {
-          map.set(ex.exerciseId, ex.name)
-        }
-      })
-    })
-    return Array.from(map.entries()).map(([id, name]) => ({ id, name }))
-  }, [sessions])
-
-  // Auto-select first exercise
-  const exerciseId = selectedExercise || allExercises[0]?.id || ''
 
   if (sessions.length === 0) {
     return (
@@ -43,232 +40,305 @@ export default function ProgressCharts() {
         <h2 className="font-display text-2xl tracking-wider text-text">PROGRESS</h2>
       </div>
 
-      {/* Section tabs */}
-      <div className="px-5 flex gap-2 mb-4">
-        {[
-          { id: 'exercise', label: 'Exercise', icon: TrendingUp },
-          { id: 'volume', label: 'Volume', icon: BarChart3 },
-          { id: 'records', label: 'Records', icon: Trophy },
-        ].map(({ id, label, icon: Icon }) => (
-          <button
-            key={id}
-            onClick={() => setActiveSection(id)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono uppercase tracking-wider transition-colors ${
-              activeSection === id
-                ? 'bg-accent/10 text-accent border border-accent/20'
-                : 'bg-card border border-border text-muted'
-            }`}
-          >
-            <Icon size={13} />
-            {label}
-          </button>
-        ))}
+      <div className="px-4 space-y-4">
+        <WeeklySummary sessions={sessions} />
+        <MuscleGroupVolume sessions={sessions} />
+        <StrengthTrends sessions={sessions} unit={settings.unit} />
+        <WeeklySetsTrend sessions={sessions} />
+        <PersonalRecords sessions={sessions} unit={settings.unit} />
       </div>
-
-      {activeSection === 'exercise' && (
-        <ExerciseChart
-          sessions={sessions}
-          exercises={allExercises}
-          selectedId={exerciseId}
-          onSelect={setSelectedExercise}
-          unit={settings.unit}
-        />
-      )}
-      {activeSection === 'volume' && (
-        <VolumeChart sessions={sessions} program={program} unit={settings.unit} />
-      )}
-      {activeSection === 'records' && (
-        <PersonalRecords sessions={sessions} exercises={allExercises} unit={settings.unit} />
-      )}
     </div>
   )
 }
 
-function ExerciseChart({ sessions, exercises, selectedId, onSelect, unit }) {
+function WeeklySummary({ sessions }) {
+  const workouts = calcWorkoutsThisWeek(sessions)
+  const totalSets = calcWeeklyTotalSets(sessions, 0)
+  const streak = calcStreak(sessions)
+
+  return (
+    <div className="bg-card border border-border rounded-xl px-4 py-3.5">
+      <p className="text-[10px] font-mono text-muted uppercase tracking-wider mb-3">This Week</p>
+      <div className="grid grid-cols-3 gap-3">
+        <div className="text-center">
+          <p className="text-2xl font-mono font-medium text-accent">{workouts}</p>
+          <p className="text-[10px] font-mono text-muted mt-0.5">Workouts</p>
+        </div>
+        <div className="text-center">
+          <p className="text-2xl font-mono font-medium text-text">{totalSets}</p>
+          <p className="text-[10px] font-mono text-muted mt-0.5">Total Sets</p>
+        </div>
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-1">
+            <Flame size={16} className={streak > 0 ? 'text-accent-secondary' : 'text-muted/30'} />
+            <p className="text-2xl font-mono font-medium text-text">{streak}</p>
+          </div>
+          <p className="text-[10px] font-mono text-muted mt-0.5">Week Streak</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function MuscleGroupVolume({ sessions }) {
+  const muscleData = useMemo(() => {
+    const setsMap = calcSetsPerMuscleGroup(sessions, EXERCISE_LIBRARY, 0)
+    return MUSCLE_GROUP_ORDER.map(muscle => ({
+      muscle,
+      sets: setsMap[muscle] || 0,
+    })).filter(d => d.sets > 0 || MUSCLE_GROUP_ORDER.indexOf(d.muscle) < 6) // Always show top 6
+  }, [sessions])
+
+  const getBarColor = (sets) => {
+    if (sets === 0) return '#222527'
+    if (sets < 10) return '#ef4444' // red — below MEV
+    if (sets <= 20) return '#e8ff47' // accent green — optimal
+    return '#ff6b35' // orange — approaching MRV
+  }
+
+  const getZoneLabel = (sets) => {
+    if (sets === 0) return ''
+    if (sets < 10) return 'Low'
+    if (sets <= 20) return 'Optimal'
+    return 'High'
+  }
+
+  return (
+    <div className="bg-card border border-border rounded-xl px-4 py-3.5">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-[10px] font-mono text-muted uppercase tracking-wider">Sets Per Muscle Group</p>
+        <p className="text-[10px] font-mono text-muted">This Week</p>
+      </div>
+      <div className="space-y-2">
+        {muscleData.map(({ muscle, sets }) => (
+          <div key={muscle} className="flex items-center gap-2">
+            <p className="text-[10px] font-mono text-muted w-20 text-right shrink-0">{muscle}</p>
+            <div className="flex-1 h-5 bg-bg rounded-full overflow-hidden relative">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${Math.min((sets / 25) * 100, 100)}%`,
+                  backgroundColor: getBarColor(sets),
+                  minWidth: sets > 0 ? '8px' : '0',
+                }}
+              />
+              {/* 10-set and 20-set reference lines */}
+              <div className="absolute top-0 bottom-0 left-[40%] w-px bg-muted/20" />
+              <div className="absolute top-0 bottom-0 left-[80%] w-px bg-muted/20" />
+            </div>
+            <p className={`text-xs font-mono w-8 text-right shrink-0 ${
+              sets === 0 ? 'text-muted/30' : sets < 10 ? 'text-red-400' : sets <= 20 ? 'text-accent' : 'text-accent-secondary'
+            }`}>
+              {sets}
+            </p>
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center justify-center gap-4 mt-3 pt-2 border-t border-border">
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400" /><span className="text-[9px] font-mono text-muted">&lt;10 Low</span></span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-accent" /><span className="text-[9px] font-mono text-muted">10-20 Optimal</span></span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-accent-secondary" /><span className="text-[9px] font-mono text-muted">&gt;20 High</span></span>
+      </div>
+    </div>
+  )
+}
+
+function StrengthTrends({ sessions, unit }) {
+  const [selectedExercise, setSelectedExercise] = useState('')
+
+  const allExercises = useMemo(() => {
+    const map = new Map()
+    sessions.forEach(s => {
+      s.exercises.forEach(ex => {
+        if (!map.has(ex.exerciseId)) map.set(ex.exerciseId, ex.name)
+      })
+    })
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }))
+  }, [sessions])
+
+  const exerciseId = selectedExercise || allExercises[0]?.id || ''
+
   const chartData = useMemo(() => {
     return sessions
-      .filter(s => s.exercises.some(e => e.exerciseId === selectedId))
+      .filter(s => s.exercises.some(e => e.exerciseId === exerciseId))
       .map(s => {
-        const ex = s.exercises.find(e => e.exerciseId === selectedId)
+        const ex = s.exercises.find(e => e.exerciseId === exerciseId)
         const bestSet = ex.sets.reduce((best, set) => {
           if (!set.completed) return best
-          return (!best || set.weight > best.weight) ? set : best
+          const e1rm = calcEstimated1RM(set.weight, set.reps)
+          return (!best || e1rm > best.e1rm) ? { ...set, e1rm } : best
         }, null)
         return bestSet ? {
           date: formatDate(s.date),
+          e1rm: Math.round(displayWeight(bestSet.e1rm, unit)),
           weight: displayWeight(bestSet.weight, unit),
           reps: bestSet.reps,
         } : null
       })
       .filter(Boolean)
-  }, [sessions, selectedId, unit])
+  }, [sessions, exerciseId, unit])
+
+  // Trend indicator: compare avg of last 2 vs previous 2
+  const trend = useMemo(() => {
+    if (chartData.length < 4) return 'neutral'
+    const recent = chartData.slice(-2).reduce((s, d) => s + d.e1rm, 0) / 2
+    const prior = chartData.slice(-4, -2).reduce((s, d) => s + d.e1rm, 0) / 2
+    if (recent > prior * 1.02) return 'up'
+    if (recent < prior * 0.98) return 'down'
+    return 'neutral'
+  }, [chartData])
 
   return (
-    <div className="px-4">
-      {/* Exercise selector */}
+    <div className="bg-card border border-border rounded-xl px-4 py-3.5">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-[10px] font-mono text-muted uppercase tracking-wider">Strength Trend</p>
+        <div className="flex items-center gap-1">
+          {trend === 'up' && <TrendingUp size={14} className="text-accent" />}
+          {trend === 'down' && <TrendingDown size={14} className="text-red-400" />}
+          {trend === 'neutral' && <Minus size={14} className="text-muted" />}
+          <span className={`text-[10px] font-mono ${trend === 'up' ? 'text-accent' : trend === 'down' ? 'text-red-400' : 'text-muted'}`}>
+            {trend === 'up' ? 'Gaining' : trend === 'down' ? 'Declining' : 'Stable'}
+          </span>
+        </div>
+      </div>
+
       <select
-        value={selectedId}
-        onChange={e => onSelect(e.target.value)}
-        className="w-full bg-card border border-border rounded-lg px-3 py-2.5 text-sm font-body text-text mb-4 focus:outline-none focus:border-accent/30 appearance-none"
+        value={exerciseId}
+        onChange={e => setSelectedExercise(e.target.value)}
+        className="w-full bg-bg border border-border rounded-lg px-3 py-2 text-sm font-body text-text mb-3 focus:outline-none focus:border-accent/30 appearance-none"
         style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%236b6e72\' stroke-width=\'2\'%3E%3Cpath d=\'M6 9l6 6 6-6\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center' }}
       >
-        {exercises.map(ex => (
+        {allExercises.map(ex => (
           <option key={ex.id} value={ex.id}>{ex.name}</option>
         ))}
       </select>
 
       {chartData.length > 1 ? (
-        <div className="bg-card border border-border rounded-xl p-4">
-          <ResponsiveContainer width="100%" height={220}>
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#222527" />
-              <XAxis
-                dataKey="date"
-                tick={{ fontSize: 10, fill: '#6b6e72', fontFamily: 'DM Mono' }}
-                stroke="#222527"
-              />
-              <YAxis
-                tick={{ fontSize: 10, fill: '#6b6e72', fontFamily: 'DM Mono' }}
-                stroke="#222527"
-                width={40}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#161819',
-                  border: '1px solid #222527',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                  fontFamily: 'DM Mono',
-                }}
-                labelStyle={{ color: '#e2e2e2' }}
-                itemStyle={{ color: '#e8ff47' }}
-              />
-              <Line
-                type="monotone"
-                dataKey="weight"
-                stroke="#e8ff47"
-                strokeWidth={2}
-                dot={{ fill: '#e8ff47', r: 3 }}
-                activeDot={{ r: 5 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+        <ResponsiveContainer width="100%" height={200}>
+          <LineChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#222527" />
+            <XAxis dataKey="date" tick={{ fontSize: 9, fill: '#6b6e72', fontFamily: 'DM Mono' }} stroke="#222527" />
+            <YAxis tick={{ fontSize: 10, fill: '#6b6e72', fontFamily: 'DM Mono' }} stroke="#222527" width={40} domain={['dataMin - 10', 'dataMax + 10']} />
+            <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={{ color: '#e2e2e2' }} formatter={(val) => [`${val} ${unit}`, 'Est. 1RM']} />
+            <Line type="monotone" dataKey="e1rm" stroke="#e8ff47" strokeWidth={2} dot={{ fill: '#e8ff47', r: 3 }} activeDot={{ r: 5 }} />
+          </LineChart>
+        </ResponsiveContainer>
       ) : (
-        <div className="bg-card border border-border rounded-xl p-8 text-center">
-          <p className="text-xs font-mono text-muted">
-            Need at least 2 sessions to show a chart.
-          </p>
-        </div>
+        <p className="text-xs font-mono text-muted text-center py-6">Need 2+ sessions to show trend.</p>
+      )}
+      <p className="text-[9px] font-mono text-muted/50 text-center mt-1">Estimated 1RM ({unit}) — Epley formula</p>
+    </div>
+  )
+}
+
+function WeeklySetsTrend({ sessions }) {
+  const weeklyData = useMemo(() => {
+    const data = []
+    for (let w = 7; w >= 0; w--) {
+      const sets = calcWeeklyTotalSets(sessions, w)
+      const weekDate = new Date()
+      weekDate.setDate(weekDate.getDate() - weekDate.getDay() - w * 7)
+      data.push({
+        week: weekDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        sets,
+      })
+    }
+    return data
+  }, [sessions])
+
+  const hasData = weeklyData.some(d => d.sets > 0)
+
+  return (
+    <div className="bg-card border border-border rounded-xl px-4 py-3.5">
+      <p className="text-[10px] font-mono text-muted uppercase tracking-wider mb-3">Weekly Total Sets (8 Weeks)</p>
+      {hasData ? (
+        <ResponsiveContainer width="100%" height={180}>
+          <BarChart data={weeklyData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#222527" />
+            <XAxis dataKey="week" tick={{ fontSize: 9, fill: '#6b6e72', fontFamily: 'DM Mono' }} stroke="#222527" />
+            <YAxis tick={{ fontSize: 10, fill: '#6b6e72', fontFamily: 'DM Mono' }} stroke="#222527" width={30} />
+            <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={{ color: '#e2e2e2' }} formatter={(val) => [val, 'Sets']} />
+            <Bar dataKey="sets" fill="#e8ff47" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      ) : (
+        <p className="text-xs font-mono text-muted text-center py-6">No data yet.</p>
       )}
     </div>
   )
 }
 
-function VolumeChart({ sessions, program, unit }) {
-  const weeklyData = useMemo(() => {
-    const weeks = new Map()
+function PersonalRecords({ sessions, unit }) {
+  const allExercises = useMemo(() => {
+    const map = new Map()
     sessions.forEach(s => {
-      const d = new Date(s.date + 'T12:00:00')
-      const weekStart = new Date(d)
-      weekStart.setDate(d.getDate() - d.getDay())
-      const weekKey = weekStart.toISOString().split('T')[0]
-
-      if (!weeks.has(weekKey)) weeks.set(weekKey, { week: formatDate(weekKey), total: 0 })
-      const entry = weeks.get(weekKey)
-
       s.exercises.forEach(ex => {
-        ex.sets.filter(set => set.completed).forEach(set => {
-          entry.total += displayWeight(set.weight * set.reps, unit)
-        })
+        if (!map.has(ex.exerciseId)) map.set(ex.exerciseId, ex.name)
       })
     })
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }))
+  }, [sessions])
 
-    return Array.from(weeks.values()).slice(-8)
-  }, [sessions, unit])
-
-  return (
-    <div className="px-4">
-      {weeklyData.length > 0 ? (
-        <div className="bg-card border border-border rounded-xl p-4">
-          <p className="text-[10px] font-mono text-muted uppercase tracking-wider mb-3">
-            Weekly Total Volume ({unit})
-          </p>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={weeklyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#222527" />
-              <XAxis
-                dataKey="week"
-                tick={{ fontSize: 10, fill: '#6b6e72', fontFamily: 'DM Mono' }}
-                stroke="#222527"
-              />
-              <YAxis
-                tick={{ fontSize: 10, fill: '#6b6e72', fontFamily: 'DM Mono' }}
-                stroke="#222527"
-                width={50}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#161819',
-                  border: '1px solid #222527',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                  fontFamily: 'DM Mono',
-                }}
-                labelStyle={{ color: '#e2e2e2' }}
-                itemStyle={{ color: '#e8ff47' }}
-              />
-              <Bar dataKey="total" fill="#e8ff47" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      ) : (
-        <div className="bg-card border border-border rounded-xl p-8 text-center">
-          <p className="text-xs font-mono text-muted">No volume data yet.</p>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function PersonalRecords({ sessions, exercises, unit }) {
   const records = useMemo(() => {
-    return exercises
+    return allExercises
       .map(ex => {
         const pr = findPR(sessions, ex.id)
-        return pr ? { ...ex, ...pr } : null
+        if (!pr) return null
+        const e1rm = calcEstimated1RM(pr.weight, pr.reps)
+        const days = daysSince(pr.date)
+        return { ...ex, ...pr, e1rm, days }
       })
       .filter(Boolean)
-      .sort((a, b) => b.weight - a.weight)
-  }, [sessions, exercises])
+      .sort((a, b) => b.e1rm - a.e1rm)
+  }, [sessions, allExercises])
+
+  const getDaysColor = (days) => {
+    if (days <= 30) return 'text-accent'
+    if (days <= 60) return 'text-yellow-400'
+    return 'text-red-400'
+  }
+
+  const getDaysBg = (days) => {
+    if (days <= 30) return 'border-accent/20'
+    if (days <= 60) return 'border-yellow-400/20'
+    return 'border-red-400/20'
+  }
 
   return (
-    <div className="px-4">
+    <div className="bg-card border border-border rounded-xl px-4 py-3.5">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-[10px] font-mono text-muted uppercase tracking-wider">Personal Records</p>
+        <p className="text-[10px] font-mono text-muted">Sorted by Est. 1RM</p>
+      </div>
       {records.length > 0 ? (
         <div className="space-y-1.5">
           {records.map(rec => (
             <div
               key={rec.id}
-              className="flex items-center gap-3 bg-card border border-border rounded-xl px-4 py-3"
+              className={`flex items-center gap-3 bg-bg border rounded-lg px-3 py-2.5 ${getDaysBg(rec.days)}`}
             >
-              <Trophy size={14} className="text-accent shrink-0" />
+              <Trophy size={13} className={getDaysColor(rec.days) + ' shrink-0'} />
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-body font-medium text-text truncate">{rec.name}</p>
-                <p className="text-[10px] font-mono text-muted mt-0.5">{formatDate(rec.date)}</p>
+                <p className="text-[10px] font-mono text-muted mt-0.5">
+                  {displayWeight(rec.weight, unit)} {unit} × {rec.reps} reps
+                </p>
               </div>
               <div className="text-right shrink-0">
                 <p className="text-sm font-mono font-medium text-accent">
-                  {displayWeight(rec.weight, unit)} {unit}
+                  {Math.round(displayWeight(rec.e1rm, unit))}
                 </p>
-                <p className="text-[10px] font-mono text-muted">{rec.reps} reps</p>
+                <p className="text-[9px] font-mono text-muted">est. 1RM</p>
+              </div>
+              <div className={`text-right shrink-0 ${getDaysColor(rec.days)}`}>
+                <p className="text-[10px] font-mono">{rec.days}d</p>
+                <p className="text-[9px] font-mono text-muted">ago</p>
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="bg-card border border-border rounded-xl p-8 text-center">
-          <p className="text-xs font-mono text-muted">No personal records yet.</p>
-        </div>
+        <p className="text-xs font-mono text-muted text-center py-6">No records yet.</p>
       )}
     </div>
   )
