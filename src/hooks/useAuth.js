@@ -23,14 +23,19 @@ export default function useAuth() {
     return () => subscription.unsubscribe()
   }, [])
 
-  const signIn = useCallback(() => {
+  const signIn = useCallback(async () => {
     if (!supabase) return
-    supabase.auth.signInWithOAuth({
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: window.location.origin + '/erber-fit-v2/',
+        skipBrowserRedirect: false,
       },
     })
+    // Fallback: if the browser wasn't redirected automatically, do it manually
+    if (data?.url) {
+      window.location.href = data.url
+    }
   }, [])
 
   const signOut = useCallback(async () => {
