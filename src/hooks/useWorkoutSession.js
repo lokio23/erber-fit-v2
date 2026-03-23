@@ -123,6 +123,13 @@ export default function useWorkoutSession() {
     }))
   }, [setSessions])
 
+  const resumeSession = useCallback((sessionId) => {
+    setSessions(prev => prev.map(session => {
+      if (session.id !== sessionId) return session
+      return { ...session, completedAt: null }
+    }))
+  }, [setSessions])
+
   const abortSession = useCallback((sessionId) => {
     setSessions(prev => prev.filter(session => session.id !== sessionId))
   }, [setSessions])
@@ -158,6 +165,7 @@ export default function useWorkoutSession() {
     logSet,
     updateExerciseNotes,
     completeSession,
+    resumeSession,
     abortSession,
     removeSet,
   }
