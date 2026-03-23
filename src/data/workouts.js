@@ -47,6 +47,8 @@ export const DEFAULT_PROGRAM = {
       { id: 'face_pull', name: 'Face Pull', sets: 3, repsMin: 15, repsMax: 20, restSeconds: 90, isBuiltIn: true, isCompound: false },
       { id: 'incline_db_curl', name: 'Incline Dumbbell Curl', sets: 3, repsMin: 10, repsMax: 12, restSeconds: 90, isBuiltIn: true, isCompound: false },
       { id: 'hammer_curl', name: 'Hammer Curl', sets: 2, repsMin: 12, repsMax: 15, restSeconds: 90, isBuiltIn: true, isCompound: false },
+      { id: 'hanging_leg_raise', name: 'Hanging Leg Raise', sets: 3, repsMin: 10, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: false, isCore: true },
+      { id: 'cable_woodchop', name: 'Cable Woodchop', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: true, isCore: true },
     ],
   },
   wednesday: {
@@ -61,6 +63,8 @@ export const DEFAULT_PROGRAM = {
       { id: 'lying_leg_curl', name: 'Lying or Seated Leg Curl', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 90, isBuiltIn: true, isCompound: false },
       { id: 'bulgarian_split_squat', name: 'Bulgarian Split Squat', sets: 3, repsMin: 10, repsMax: 10, restSeconds: 120, isBuiltIn: true, isCompound: true },
       { id: 'standing_calf_raise', name: 'Standing Calf Raise', sets: 4, repsMin: 15, repsMax: 20, restSeconds: 60, isBuiltIn: true, isCompound: false },
+      { id: 'ab_wheel', name: 'Ab Wheel Rollout', sets: 3, repsMin: 8, repsMax: 12, restSeconds: 60, isBuiltIn: true, isCompound: true, isCore: true },
+      { id: 'plank', name: 'Plank (weighted)', sets: 3, repsMin: 30, repsMax: 60, restSeconds: 60, isBuiltIn: true, isCompound: false, isCore: true },
     ],
   },
   thursday: {
@@ -96,6 +100,8 @@ export const DEFAULT_PROGRAM = {
       { id: 'reverse_pec_deck', name: 'Reverse Pec Deck', sets: 3, repsMin: 15, repsMax: 20, restSeconds: 90, isBuiltIn: true, isCompound: false },
       { id: 'ez_bar_curl', name: 'EZ Bar Curl', sets: 3, repsMin: 10, repsMax: 12, restSeconds: 90, isBuiltIn: true, isCompound: false },
       { id: 'single_arm_cable_curl', name: 'Single-Arm Cable Curl', sets: 2, repsMin: 12, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: false },
+      { id: 'cable_crunch', name: 'Cable Crunch', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: false, isCore: true },
+      { id: 'russian_twist', name: 'Russian Twist', sets: 3, repsMin: 15, repsMax: 20, restSeconds: 60, isBuiltIn: true, isCompound: false, isCore: true },
     ],
   },
   sunday: {
@@ -110,6 +116,8 @@ export const DEFAULT_PROGRAM = {
       { id: 'leg_extension', name: 'Leg Extension', sets: 3, repsMin: 15, repsMax: 20, restSeconds: 90, isBuiltIn: true, isCompound: false },
       { id: 'seated_leg_curl', name: 'Seated Leg Curl', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 90, isBuiltIn: true, isCompound: false },
       { id: 'hip_thrust', name: 'Hip Thrust (DB or Barbell)', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 90, isBuiltIn: true, isCompound: true },
+      { id: 'hanging_leg_raise', name: 'Hanging Leg Raise', sets: 3, repsMin: 10, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: false, isCore: true },
+      { id: 'cable_woodchop', name: 'Cable Woodchop', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: true, isCore: true },
     ],
   },
 }
