@@ -47,7 +47,7 @@ export function findPR(sessions, exerciseId) {
     for (const set of ex.sets) {
       if (!set.completed) continue
       if (!best || set.weight > best.weight || (set.weight === best.weight && set.reps > best.reps)) {
-        best = { weight: set.weight, reps: set.reps, date: session.date }
+        best = { weight: set.weight, reps: set.reps, rpe: set.rpe || null, date: session.date }
       }
     }
   }

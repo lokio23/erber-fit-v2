@@ -79,7 +79,7 @@ export default function useWorkoutSession() {
     })
   }, [program, setSessions, getDayKey])
 
-  const logSet = useCallback((sessionId, exerciseId, weight, reps, isWarmup = false) => {
+  const logSet = useCallback((sessionId, exerciseId, weight, reps, rpe, isWarmup = false) => {
     setSessions(prev => prev.map(session => {
       if (session.id !== sessionId) return session
       const key = isWarmup ? 'warmupExercises' : 'exercises'
@@ -92,6 +92,7 @@ export default function useWorkoutSession() {
             sets: [...ex.sets, {
               weight: Number(weight),
               reps: Number(reps),
+              rpe: rpe || null,
               completed: true,
               timestamp: new Date().toISOString(),
             }],
