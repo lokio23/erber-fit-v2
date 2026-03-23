@@ -22,7 +22,7 @@ const DAY_LABELS = {
 }
 
 export default function TodayWorkout({ onStartTimer }) {
-  const { program, sessions, settings, setSettings, getDayKey, getTodaysSession, startSession, completeSession, abortSession } = useWorkout()
+  const { program, sessions, settings, setSettings, getDayKey, getTodaysSession, startSession, completeSession, resumeSession, abortSession } = useWorkout()
 
   const todayKey = getDayKey()
   const [selectedDay, setSelectedDay] = useState(todayKey)
@@ -229,12 +229,18 @@ export default function TodayWorkout({ onStartTimer }) {
           {isToday && session?.completedAt && (
             <div className="mx-4 mb-3 px-4 py-4 rounded-xl border border-accent/30 flex items-center gap-3" style={{ background: 'linear-gradient(135deg, rgba(232,255,71,0.12), rgba(232,255,71,0.04), transparent)', boxShadow: '0 0 20px rgba(232,255,71,0.08), inset 0 1px 0 rgba(232,255,71,0.1)' }}>
               <Trophy size={20} className="text-accent shrink-0" style={{ filter: 'drop-shadow(0 0 8px rgba(232,255,71,0.7))' }} />
-              <div>
+              <div className="flex-1">
                 <p className="text-sm font-display tracking-wider text-accent">WORKOUT COMPLETE</p>
                 <p className="text-[11px] font-mono text-muted mt-0.5">
                   {completedSets} of {totalSets} sets logged
                 </p>
               </div>
+              <button
+                onClick={() => resumeSession(session.id)}
+                className="text-[10px] font-mono text-accent/70 underline shrink-0 active:opacity-70"
+              >
+                Resume
+              </button>
             </div>
           )}
 
