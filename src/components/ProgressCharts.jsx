@@ -262,6 +262,7 @@ function StrengthTrends({ sessions, unit }) {
           e1rm: Math.round(displayWeight(bestSet.e1rm, unit)),
           weight: displayWeight(bestSet.weight, unit),
           reps: bestSet.reps,
+          rpe: bestSet.rpe || null,
         } : null
       })
       .filter(Boolean)
@@ -308,7 +309,10 @@ function StrengthTrends({ sessions, unit }) {
             <CartesianGrid strokeDasharray="3 3" stroke="#222527" />
             <XAxis dataKey="date" tick={{ fontSize: 9, fill: '#6b6e72', fontFamily: 'DM Mono' }} stroke="#222527" />
             <YAxis tick={{ fontSize: 10, fill: '#6b6e72', fontFamily: 'DM Mono' }} stroke="#222527" width={40} domain={['dataMin - 10', 'dataMax + 10']} />
-            <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={{ color: '#e2e2e2' }} formatter={(val) => [`${val} ${unit}`, 'Est. 1RM']} />
+            <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={{ color: '#e2e2e2' }} formatter={(val, name, props) => {
+              const rpe = props.payload?.rpe
+              return [`${val} ${unit}${rpe ? ` (RPE ${rpe})` : ''}`, 'Est. 1RM']
+            }} />
             <Line type="monotone" dataKey="e1rm" stroke="#e8ff47" strokeWidth={2} dot={{ fill: '#e8ff47', r: 3 }} activeDot={{ r: 5 }} />
           </LineChart>
         </ResponsiveContainer>
@@ -411,6 +415,7 @@ function PersonalRecords({ sessions, unit }) {
                 <p className="text-xs font-body font-medium text-text truncate">{rec.name}</p>
                 <p className="text-[10px] font-mono text-muted mt-0.5">
                   {displayWeight(rec.weight, unit)} {unit} × {rec.reps} reps
+                  {rec.rpe && <span className="text-accent-secondary/70 ml-1">@ RPE {rec.rpe}</span>}
                 </p>
               </div>
               <div className="text-right shrink-0">

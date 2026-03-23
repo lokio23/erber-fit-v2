@@ -65,8 +65,8 @@ export default function ExerciseCard({ exercise, sessionExercise, sessionId, onS
   const completedSets = sessionExercise?.sets || []
   const targetSets = exercise.sets
 
-  const handleLogSet = (weight, reps) => {
-    logSet(sessionId, exercise.id, weight, reps, !!isWarmup)
+  const handleLogSet = (weight, reps, rpe) => {
+    logSet(sessionId, exercise.id, weight, reps, rpe, !!isWarmup)
     if (onSetLogged) onSetLogged(exercise.restSeconds)
   }
 
@@ -192,7 +192,7 @@ export default function ExerciseCard({ exercise, sessionExercise, sessionId, onS
                 lastWeight={lastWeight}
                 completedSet={completed}
                 isPR={completed ? isPRSet(completed) : false}
-                onLog={(weight, reps) => handleLogSet(weight, reps)}
+                onLog={(weight, reps, rpe) => handleLogSet(weight, reps, rpe)}
                 onRemove={() => handleRemoveSet(i)}
                 unit={settings.unit}
               />
