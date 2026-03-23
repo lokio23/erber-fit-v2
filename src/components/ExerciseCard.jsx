@@ -43,35 +43,35 @@ function injectAnimationStyles() {
 // Inject animation styles once at module load (not inside render)
 injectAnimationStyles()
 
-export default function ExerciseCard({ exercise, sessionExercise, sessionId, onSetLogged, readOnly }) {
+export default function ExerciseCard({ exercise, sessionExercise, sessionId, onSetLogged, readOnly, isWarmup }) {
   const { sessions, settings, logSet, updateExerciseNotes, removeSet } = useWorkout()
   const [showNotes, setShowNotes] = useState(!!sessionExercise?.notes)
 
   const lastWeight = useMemo(
-    () => readOnly ? null : getLastSessionWeight(sessions.slice(0, -1), exercise.id),
-    [sessions, exercise.id, readOnly]
+    () => (readOnly || isWarmup) ? null : getLastSessionWeight(sessions.slice(0, -1), exercise.id),
+    [sessions, exercise.id, readOnly, isWarmup]
   )
 
   const currentPR = useMemo(
-    () => readOnly ? null : findPR(sessions, exercise.id),
-    [sessions, exercise.id, readOnly]
+    () => (readOnly || isWarmup) ? null : findPR(sessions, exercise.id),
+    [sessions, exercise.id, readOnly, isWarmup]
   )
 
   const needsOverload = useMemo(
-    () => readOnly ? false : isWeightStagnant(sessions, exercise.id),
-    [sessions, exercise.id, readOnly]
+    () => (readOnly || isWarmup) ? false : isWeightStagnant(sessions, exercise.id),
+    [sessions, exercise.id, readOnly, isWarmup]
   )
 
   const completedSets = sessionExercise?.sets || []
   const targetSets = exercise.sets
 
   const handleLogSet = (weight, reps) => {
-    logSet(sessionId, exercise.id, weight, reps)
+    logSet(sessionId, exercise.id, weight, reps, !!isWarmup)
     if (onSetLogged) onSetLogged(exercise.restSeconds)
   }
 
   const handleRemoveSet = (index) => {
-    removeSet(sessionId, exercise.id, index)
+    removeSet(sessionId, exercise.id, index, !!isWarmup)
   }
 
   const isPRSet = (set) => {
@@ -79,7 +79,7 @@ export default function ExerciseCard({ exercise, sessionExercise, sessionId, onS
     return set.weight > currentPR.weight || (set.weight === currentPR.weight && set.reps > currentPR.reps)
   }
 
-  const allSetsComplete = !readOnly && completedSets.length >= targetSets
+  const allSetsComplete = !readOnly && !isWarmup && completedSets.length >= targetSets
 
   // Detect the moment all sets become complete (not on mount)
   const prevCompleteRef = useRef(allSetsComplete)
@@ -149,13 +149,21 @@ export default function ExerciseCard({ exercise, sessionExercise, sessionId, onS
 
         {/* Tags */}
         <div className="flex flex-wrap gap-1.5 mt-2.5">
-          <span className="text-[10px] font-mono text-muted/70 bg-bg px-2 py-0.5 rounded">
-            Stop 1-2 reps before failure
-          </span>
-          {exercise.isCompound && exercise.restSeconds >= 180 && (
-            <span className="text-[10px] font-mono text-accent-secondary/70 bg-accent-secondary/5 px-2 py-0.5 rounded">
-              Full rest — do not skip
+          {isWarmup ? (
+            <span className="text-[10px] font-mono text-blue-400/70 bg-blue-400/5 px-2 py-0.5 rounded">
+              Light weight — focus on form
             </span>
+          ) : (
+            <>
+              <span className="text-[10px] font-mono text-muted/70 bg-bg px-2 py-0.5 rounded">
+                Stop 1-2 reps before failure
+              </span>
+              {exercise.isCompound && exercise.restSeconds >= 180 && (
+                <span className="text-[10px] font-mono text-accent-secondary/70 bg-accent-secondary/5 px-2 py-0.5 rounded">
+                  Full rest — do not skip
+                </span>
+              )}
+            </>
           )}
         </div>
 
@@ -212,7 +220,7 @@ export default function ExerciseCard({ exercise, sessionExercise, sessionId, onS
         <div className="px-4 pb-4 -mt-2">
           <textarea
             value={sessionExercise?.notes || ''}
-            onChange={e => updateExerciseNotes(sessionId, exercise.id, e.target.value)}
+            onChange={e => updateExerciseNotes(sessionId, exercise.id, e.target.value, !!isWarmup)}
             placeholder="Add notes..."
             rows={2}
             className="w-full bg-bg border border-border rounded-lg px-3 py-2 text-xs font-mono text-text placeholder:text-muted/40 focus:outline-none focus:border-accent/30 resize-none"

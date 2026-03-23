@@ -41,11 +41,13 @@ export default function TodayWorkout({ onStartTimer }) {
     }
   }, [deloadActive, settings.deloadActiveUntil, setSettings])
 
-  // Apply deload: halve sets when active
+  // Apply deload: halve sets when active (warm-ups unaffected)
   const effectiveExercises = useMemo(() => {
     if (!deloadActive) return workout.exercises
     return workout.exercises.map(ex => ({ ...ex, sets: getDeloadSets(ex.sets) }))
   }, [workout.exercises, deloadActive])
+
+  const effectiveWarmups = workout.warmupExercises || []
 
   const session = getTodaysSession()
 
@@ -232,6 +234,44 @@ export default function TodayWorkout({ onStartTimer }) {
                 <p className="text-[11px] font-mono text-muted mt-0.5">
                   {completedSets} of {totalSets} sets logged
                 </p>
+              </div>
+            </div>
+          )}
+
+          {/* Warm-up section */}
+          {effectiveWarmups.length > 0 && (
+            <div className="px-4 mb-2">
+              <div className="flex items-center gap-2 mb-2 mt-1">
+                <span className="text-[10px] font-mono text-blue-400/80 uppercase tracking-widest">Warm-Up</span>
+                <span className="text-[10px] font-mono text-muted/50">Light weight, full ROM</span>
+              </div>
+              <div className="space-y-2">
+                {isToday && session ? (
+                  effectiveWarmups.map(exercise => {
+                    const sessionEx = (session.warmupExercises || []).find(e => e.exerciseId === exercise.id)
+                    return (
+                      <ExerciseCard
+                        key={exercise.id}
+                        exercise={exercise}
+                        sessionExercise={sessionEx}
+                        sessionId={session.id}
+                        onSetLogged={handleSetLogged}
+                        readOnly={!!session.completedAt}
+                        isWarmup
+                      />
+                    )
+                  })
+                ) : (
+                  effectiveWarmups.map(exercise => (
+                    <ExerciseCard key={exercise.id} exercise={exercise} readOnly isWarmup />
+                  ))
+                )}
+              </div>
+              {/* Divider */}
+              <div className="flex items-center gap-2 mt-4 mb-1">
+                <div className="flex-1 h-px bg-border" />
+                <span className="text-[10px] font-mono text-muted/50 uppercase tracking-widest">Working Sets</span>
+                <div className="flex-1 h-px bg-border" />
               </div>
             </div>
           )}

@@ -1,8 +1,31 @@
+// Warm-up exercise templates
+const PUSH_WARMUPS = [
+  { id: 'wu_band_pull_apart', name: 'Band Pull-Apart', sets: 2, repsMin: 15, repsMax: 20, restSeconds: 30, isBuiltIn: true, isCompound: false, isWarmup: true },
+  { id: 'wu_arm_circles', name: 'Arm Circles (forward + back)', sets: 2, repsMin: 15, repsMax: 15, restSeconds: 0, isBuiltIn: true, isCompound: false, isWarmup: true },
+  { id: 'wu_light_shoulder_press', name: 'Light DB Shoulder Press', sets: 2, repsMin: 12, repsMax: 15, restSeconds: 30, isBuiltIn: true, isCompound: true, isWarmup: true },
+  { id: 'wu_pushup', name: 'Push-Up (slow tempo)', sets: 2, repsMin: 10, repsMax: 15, restSeconds: 30, isBuiltIn: true, isCompound: true, isWarmup: true },
+]
+
+const PULL_WARMUPS = [
+  { id: 'wu_band_pull_apart_pull', name: 'Band Pull-Apart', sets: 2, repsMin: 15, repsMax: 20, restSeconds: 30, isBuiltIn: true, isCompound: false, isWarmup: true },
+  { id: 'wu_dead_hang', name: 'Dead Hang (seconds)', sets: 2, repsMin: 20, repsMax: 30, restSeconds: 30, isBuiltIn: true, isCompound: false, isWarmup: true },
+  { id: 'wu_light_lat_pulldown', name: 'Light Lat Pulldown', sets: 2, repsMin: 12, repsMax: 15, restSeconds: 30, isBuiltIn: true, isCompound: true, isWarmup: true },
+  { id: 'wu_scap_pull', name: 'Scapular Pull-Up', sets: 2, repsMin: 8, repsMax: 10, restSeconds: 30, isBuiltIn: true, isCompound: false, isWarmup: true },
+]
+
+const LEGS_WARMUPS = [
+  { id: 'wu_bw_squat', name: 'Bodyweight Squat', sets: 2, repsMin: 15, repsMax: 20, restSeconds: 30, isBuiltIn: true, isCompound: true, isWarmup: true },
+  { id: 'wu_hip_circle', name: 'Hip Circles (each direction)', sets: 2, repsMin: 10, repsMax: 10, restSeconds: 0, isBuiltIn: true, isCompound: false, isWarmup: true },
+  { id: 'wu_leg_swing', name: 'Leg Swings (front-to-back + lateral)', sets: 2, repsMin: 10, repsMax: 10, restSeconds: 0, isBuiltIn: true, isCompound: false, isWarmup: true },
+  { id: 'wu_walking_lunge', name: 'Walking Lunge (bodyweight)', sets: 2, repsMin: 10, repsMax: 10, restSeconds: 30, isBuiltIn: true, isCompound: true, isWarmup: true },
+]
+
 export const DEFAULT_PROGRAM = {
   monday: {
     name: 'PUSH A',
     focus: 'Strength',
     muscleGroups: ['Chest', 'Shoulders', 'Triceps'],
+    warmupExercises: PUSH_WARMUPS,
     exercises: [
       { id: 'bench_press', name: 'Barbell Bench Press', sets: 4, repsMin: 4, repsMax: 6, restSeconds: 180, isBuiltIn: true, isCompound: true },
       { id: 'incline_db_press', name: 'Incline Dumbbell Press', sets: 3, repsMin: 8, repsMax: 10, restSeconds: 120, isBuiltIn: true, isCompound: true },
@@ -16,6 +39,7 @@ export const DEFAULT_PROGRAM = {
     name: 'PULL A',
     focus: 'Strength',
     muscleGroups: ['Back', 'Biceps', 'Rear Delts'],
+    warmupExercises: PULL_WARMUPS,
     exercises: [
       { id: 'weighted_pullup', name: 'Weighted Pull-Up', sets: 4, repsMin: 4, repsMax: 6, restSeconds: 180, isBuiltIn: true, isCompound: true },
       { id: 'barbell_row', name: 'Barbell Bent-Over Row', sets: 3, repsMin: 6, repsMax: 8, restSeconds: 180, isBuiltIn: true, isCompound: true },
@@ -29,6 +53,7 @@ export const DEFAULT_PROGRAM = {
     name: 'LEGS A',
     focus: 'Strength',
     muscleGroups: ['Quads', 'Hamstrings', 'Glutes', 'Calves'],
+    warmupExercises: LEGS_WARMUPS,
     exercises: [
       { id: 'barbell_squat', name: 'Barbell Back Squat', sets: 4, repsMin: 4, repsMax: 6, restSeconds: 180, isBuiltIn: true, isCompound: true },
       { id: 'romanian_deadlift', name: 'Romanian Deadlift', sets: 3, repsMin: 8, repsMax: 10, restSeconds: 180, isBuiltIn: true, isCompound: true },
@@ -42,12 +67,14 @@ export const DEFAULT_PROGRAM = {
     name: 'REST',
     focus: 'Recovery',
     muscleGroups: [],
+    warmupExercises: [],
     exercises: [],
   },
   friday: {
     name: 'PUSH B',
     focus: 'Volume',
     muscleGroups: ['Chest', 'Shoulders', 'Triceps'],
+    warmupExercises: PUSH_WARMUPS,
     exercises: [
       { id: 'incline_barbell_press', name: 'Incline Barbell Press', sets: 4, repsMin: 8, repsMax: 10, restSeconds: 120, isBuiltIn: true, isCompound: true },
       { id: 'cable_crossover', name: 'Cable Crossover / Pec Fly', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 90, isBuiltIn: true, isCompound: false },
@@ -61,6 +88,7 @@ export const DEFAULT_PROGRAM = {
     name: 'PULL B',
     focus: 'Volume',
     muscleGroups: ['Back', 'Biceps', 'Rear Delts'],
+    warmupExercises: PULL_WARMUPS,
     exercises: [
       { id: 'lat_pulldown', name: 'Lat Pulldown (wide grip)', sets: 4, repsMin: 10, repsMax: 12, restSeconds: 120, isBuiltIn: true, isCompound: true },
       { id: 'single_arm_db_row', name: 'Single-Arm DB Row', sets: 3, repsMin: 10, repsMax: 12, restSeconds: 120, isBuiltIn: true, isCompound: true },
@@ -74,6 +102,7 @@ export const DEFAULT_PROGRAM = {
     name: 'LEGS B',
     focus: 'Volume',
     muscleGroups: ['Quads', 'Hamstrings', 'Glutes'],
+    warmupExercises: LEGS_WARMUPS,
     exercises: [
       { id: 'hack_squat', name: 'Hack Squat or Front Squat', sets: 4, repsMin: 8, repsMax: 10, restSeconds: 120, isBuiltIn: true, isCompound: true },
       { id: 'sumo_deadlift', name: 'Sumo Deadlift', sets: 3, repsMin: 6, repsMax: 8, restSeconds: 180, isBuiltIn: true, isCompound: true },
@@ -87,6 +116,26 @@ export const DEFAULT_PROGRAM = {
 
 // Comprehensive exercise library organized by muscle group
 export const EXERCISE_LIBRARY = [
+  // ── WARM-UPS ──
+  { id: 'wu_band_pull_apart', name: 'Band Pull-Apart', sets: 2, repsMin: 15, repsMax: 20, restSeconds: 30, isBuiltIn: true, isCompound: false, isWarmup: true, muscleGroups: ['Warm-Up'] },
+  { id: 'wu_arm_circles', name: 'Arm Circles (forward + back)', sets: 2, repsMin: 15, repsMax: 15, restSeconds: 0, isBuiltIn: true, isCompound: false, isWarmup: true, muscleGroups: ['Warm-Up'] },
+  { id: 'wu_light_shoulder_press', name: 'Light DB Shoulder Press', sets: 2, repsMin: 12, repsMax: 15, restSeconds: 30, isBuiltIn: true, isCompound: true, isWarmup: true, muscleGroups: ['Warm-Up'] },
+  { id: 'wu_pushup', name: 'Push-Up (slow tempo)', sets: 2, repsMin: 10, repsMax: 15, restSeconds: 30, isBuiltIn: true, isCompound: true, isWarmup: true, muscleGroups: ['Warm-Up'] },
+  { id: 'wu_band_pull_apart_pull', name: 'Band Pull-Apart', sets: 2, repsMin: 15, repsMax: 20, restSeconds: 30, isBuiltIn: true, isCompound: false, isWarmup: true, muscleGroups: ['Warm-Up'] },
+  { id: 'wu_dead_hang', name: 'Dead Hang (seconds)', sets: 2, repsMin: 20, repsMax: 30, restSeconds: 30, isBuiltIn: true, isCompound: false, isWarmup: true, muscleGroups: ['Warm-Up'] },
+  { id: 'wu_light_lat_pulldown', name: 'Light Lat Pulldown', sets: 2, repsMin: 12, repsMax: 15, restSeconds: 30, isBuiltIn: true, isCompound: true, isWarmup: true, muscleGroups: ['Warm-Up'] },
+  { id: 'wu_scap_pull', name: 'Scapular Pull-Up', sets: 2, repsMin: 8, repsMax: 10, restSeconds: 30, isBuiltIn: true, isCompound: false, isWarmup: true, muscleGroups: ['Warm-Up'] },
+  { id: 'wu_bw_squat', name: 'Bodyweight Squat', sets: 2, repsMin: 15, repsMax: 20, restSeconds: 30, isBuiltIn: true, isCompound: true, isWarmup: true, muscleGroups: ['Warm-Up'] },
+  { id: 'wu_hip_circle', name: 'Hip Circles (each direction)', sets: 2, repsMin: 10, repsMax: 10, restSeconds: 0, isBuiltIn: true, isCompound: false, isWarmup: true, muscleGroups: ['Warm-Up'] },
+  { id: 'wu_leg_swing', name: 'Leg Swings (front-to-back + lateral)', sets: 2, repsMin: 10, repsMax: 10, restSeconds: 0, isBuiltIn: true, isCompound: false, isWarmup: true, muscleGroups: ['Warm-Up'] },
+  { id: 'wu_walking_lunge', name: 'Walking Lunge (bodyweight)', sets: 2, repsMin: 10, repsMax: 10, restSeconds: 30, isBuiltIn: true, isCompound: true, isWarmup: true, muscleGroups: ['Warm-Up'] },
+  { id: 'wu_shoulder_dislocate', name: 'Shoulder Dislocate (band/stick)', sets: 2, repsMin: 10, repsMax: 15, restSeconds: 0, isBuiltIn: true, isCompound: false, isWarmup: true, muscleGroups: ['Warm-Up'] },
+  { id: 'wu_cat_cow', name: 'Cat-Cow Stretch', sets: 2, repsMin: 10, repsMax: 10, restSeconds: 0, isBuiltIn: true, isCompound: false, isWarmup: true, muscleGroups: ['Warm-Up'] },
+  { id: 'wu_world_greatest_stretch', name: 'World\'s Greatest Stretch', sets: 2, repsMin: 5, repsMax: 5, restSeconds: 0, isBuiltIn: true, isCompound: true, isWarmup: true, muscleGroups: ['Warm-Up'] },
+  { id: 'wu_glute_bridge', name: 'Glute Bridge', sets: 2, repsMin: 15, repsMax: 20, restSeconds: 30, isBuiltIn: true, isCompound: false, isWarmup: true, muscleGroups: ['Warm-Up'] },
+  { id: 'wu_inchworm', name: 'Inchworm Walk-Out', sets: 2, repsMin: 6, repsMax: 8, restSeconds: 30, isBuiltIn: true, isCompound: true, isWarmup: true, muscleGroups: ['Warm-Up'] },
+  { id: 'wu_face_pull_light', name: 'Light Face Pull', sets: 2, repsMin: 15, repsMax: 20, restSeconds: 30, isBuiltIn: true, isCompound: false, isWarmup: true, muscleGroups: ['Warm-Up'] },
+
   // ── CHEST ──
   { id: 'bench_press', name: 'Barbell Bench Press', sets: 4, repsMin: 4, repsMax: 6, restSeconds: 180, isBuiltIn: true, isCompound: true, muscleGroups: ['Chest', 'Triceps'] },
   { id: 'incline_db_press', name: 'Incline Dumbbell Press', sets: 3, repsMin: 8, repsMax: 10, restSeconds: 120, isBuiltIn: true, isCompound: true, muscleGroups: ['Chest', 'Shoulders'] },

@@ -9,13 +9,24 @@ export default function ProgramEditor({ dayKey, onClose }) {
   const { program, setProgram } = useWorkout()
   const workout = program[dayKey]
   const [addingExercise, setAddingExercise] = useState(false)
+  const [addingWarmup, setAddingWarmup] = useState(false)
   const [editingIndex, setEditingIndex] = useState(null)
+  const [editingWarmupIndex, setEditingWarmupIndex] = useState(null)
   const [confirmAction, setConfirmAction] = useState(null)
+
+  const warmupExercises = workout.warmupExercises || []
 
   const updateExercises = (newExercises) => {
     setProgram(prev => ({
       ...prev,
       [dayKey]: { ...prev[dayKey], exercises: newExercises },
+    }))
+  }
+
+  const updateWarmups = (newWarmups) => {
+    setProgram(prev => ({
+      ...prev,
+      [dayKey]: { ...prev[dayKey], warmupExercises: newWarmups },
     }))
   }
 
@@ -60,6 +71,66 @@ export default function ProgramEditor({ dayKey, onClose }) {
       </div>
 
       <div className="px-4 py-4 space-y-2 pb-32">
+        {/* Warm-up section */}
+        {warmupExercises.length > 0 && (
+          <>
+            <p className="text-[10px] font-mono text-blue-400/80 uppercase tracking-widest px-1">Warm-Up Exercises</p>
+            {warmupExercises.map((exercise, index) => (
+              <div key={`wu-${exercise.id}-${index}`}>
+                {editingWarmupIndex === index ? (
+                  <ExerciseEditForm
+                    exercise={exercise}
+                    onSave={(updates) => {
+                      const wu = [...warmupExercises]
+                      wu[index] = { ...wu[index], ...updates }
+                      updateWarmups(wu)
+                      setEditingWarmupIndex(null)
+                    }}
+                    onCancel={() => setEditingWarmupIndex(null)}
+                  />
+                ) : (
+                  <div className="flex items-center gap-2 bg-card border border-blue-400/15 rounded-xl px-3 py-3">
+                    <div className="flex flex-col gap-0.5 shrink-0">
+                      <button onClick={() => { const i2 = index - 1; if (i2 < 0) return; const wu = [...warmupExercises]; [wu[index], wu[i2]] = [wu[i2], wu[index]]; updateWarmups(wu) }} disabled={index === 0} className="p-2.5 text-muted hover:text-text disabled:opacity-20 active:opacity-70 transition-colors"><ArrowUp size={12} /></button>
+                      <button onClick={() => { const i2 = index + 1; if (i2 >= warmupExercises.length) return; const wu = [...warmupExercises]; [wu[index], wu[i2]] = [wu[i2], wu[index]]; updateWarmups(wu) }} disabled={index === warmupExercises.length - 1} className="p-2.5 text-muted hover:text-text disabled:opacity-20 active:opacity-70 transition-colors"><ArrowDown size={12} /></button>
+                    </div>
+                    <button onClick={() => setEditingWarmupIndex(index)} className="flex-1 text-left min-w-0">
+                      <p className="text-sm font-body font-medium text-text truncate">{exercise.name}</p>
+                      <p className="text-[11px] font-mono text-muted mt-0.5">{exercise.sets}×{formatRepRange(exercise.repsMin, exercise.repsMax)} · {formatRestTime(exercise.restSeconds)}</p>
+                    </button>
+                    <button onClick={() => setConfirmAction({ type: 'removeWarmup', index })} className="p-2 text-muted hover:text-accent-secondary active:opacity-70 transition-colors shrink-0"><Trash2 size={14} /></button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </>
+        )}
+
+        {/* Add warm-up button */}
+        {addingWarmup ? (
+          <AddExercisePanel
+            onAdd={(exercise) => { updateWarmups([...warmupExercises, { ...exercise, isWarmup: true }]); setAddingWarmup(false) }}
+            onCancel={() => setAddingWarmup(false)}
+            existingIds={warmupExercises.map(e => e.id)}
+            dayKey={dayKey}
+            isWarmup
+          />
+        ) : (
+          <button
+            onClick={() => setAddingWarmup(true)}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-dashed border-blue-400/30 text-blue-400/80 text-xs font-mono uppercase tracking-wider hover:bg-blue-400/5 active:opacity-70 transition-colors"
+          >
+            <Plus size={14} /> Add Warm-Up
+          </button>
+        )}
+
+        {/* Divider */}
+        <div className="flex items-center gap-2 pt-2 pb-1">
+          <div className="flex-1 h-px bg-border" />
+          <span className="text-[10px] font-mono text-muted/50 uppercase tracking-widest">Main Exercises</span>
+          <div className="flex-1 h-px bg-border" />
+        </div>
+
         {workout.exercises.map((exercise, index) => (
           <div key={`${exercise.id}-${index}`}>
             {editingIndex === index ? (
@@ -141,6 +212,20 @@ export default function ProgramEditor({ dayKey, onClose }) {
           <RotateCcw size={14} /> Reset to Default
         </button>
       </div>
+
+      {confirmAction?.type === 'removeWarmup' && (
+        <ConfirmDialog
+          title="Remove Warm-Up"
+          message={`Remove "${warmupExercises[confirmAction.index]?.name}" from warm-ups?`}
+          confirmLabel="Remove"
+          danger
+          onConfirm={() => {
+            updateWarmups(warmupExercises.filter((_, i) => i !== confirmAction.index))
+            setConfirmAction(null)
+          }}
+          onCancel={() => setConfirmAction(null)}
+        />
+      )}
 
       {confirmAction?.type === 'remove' && (
         <ConfirmDialog
@@ -240,7 +325,7 @@ function ExerciseEditForm({ exercise, onSave, onCancel }) {
   )
 }
 
-function AddExercisePanel({ onAdd, onCancel, existingIds, dayKey }) {
+function AddExercisePanel({ onAdd, onCancel, existingIds, dayKey, isWarmup }) {
   const [search, setSearch] = useState('')
   const [customMode, setCustomMode] = useState(false)
   const [customName, setCustomName] = useState('')
@@ -249,14 +334,17 @@ function AddExercisePanel({ onAdd, onCancel, existingIds, dayKey }) {
   const [customRepsMax, setCustomRepsMax] = useState('12')
   const [customRest, setCustomRest] = useState('90')
 
-  // Filter library by muscle groups matching the current day
+  // Filter library by muscle groups matching the current day, or by warm-up flag
   const { program } = useWorkout()
   const relevantExercises = useMemo(() => {
+    if (isWarmup) {
+      return EXERCISE_LIBRARY.filter(ex => ex.isWarmup)
+    }
     const dayMuscles = program[dayKey]?.muscleGroups || []
     return EXERCISE_LIBRARY.filter(ex =>
-      ex.muscleGroups.some(g => dayMuscles.includes(g))
+      !ex.isWarmup && ex.muscleGroups.some(g => dayMuscles.includes(g))
     )
-  }, [dayKey, program])
+  }, [dayKey, program, isWarmup])
 
   const filtered = relevantExercises
     .filter(ex => !existingIds.includes(ex.id) && ex.name.toLowerCase().includes(search.toLowerCase()))
@@ -314,7 +402,7 @@ function AddExercisePanel({ onAdd, onCancel, existingIds, dayKey }) {
 
   return (
     <div className="bg-card border border-accent/30 rounded-xl px-4 py-4 space-y-3">
-      <p className="text-xs font-mono text-accent uppercase tracking-wider">Add Exercise</p>
+      <p className="text-xs font-mono text-accent uppercase tracking-wider">{isWarmup ? 'Add Warm-Up' : 'Add Exercise'}</p>
       <div className="relative">
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
         <input
