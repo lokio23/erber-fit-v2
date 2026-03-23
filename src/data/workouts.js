@@ -107,7 +107,7 @@ export const DEFAULT_PROGRAM = {
   sunday: {
     name: 'LEGS B',
     focus: 'Volume',
-    muscleGroups: ['Quads', 'Hamstrings', 'Glutes'],
+    muscleGroups: ['Quads', 'Hamstrings', 'Glutes', 'Calves'],
     warmupExercises: LEGS_WARMUPS,
     exercises: [
       { id: 'hack_squat', name: 'Hack Squat or Front Squat', sets: 4, repsMin: 8, repsMax: 10, restSeconds: 120, isBuiltIn: true, isCompound: true },
@@ -116,6 +116,7 @@ export const DEFAULT_PROGRAM = {
       { id: 'leg_extension', name: 'Leg Extension', sets: 3, repsMin: 15, repsMax: 20, restSeconds: 90, isBuiltIn: true, isCompound: false },
       { id: 'seated_leg_curl', name: 'Seated Leg Curl', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 90, isBuiltIn: true, isCompound: false },
       { id: 'hip_thrust', name: 'Hip Thrust (DB or Barbell)', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 90, isBuiltIn: true, isCompound: true },
+      { id: 'seated_calf_raise', name: 'Seated Calf Raise', sets: 4, repsMin: 15, repsMax: 20, restSeconds: 60, isBuiltIn: true, isCompound: false },
       { id: 'hanging_leg_raise', name: 'Hanging Leg Raise', sets: 3, repsMin: 10, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: false, isCore: true },
       { id: 'cable_woodchop', name: 'Cable Woodchop', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: true, isCore: true },
     ],
