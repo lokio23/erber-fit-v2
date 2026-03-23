@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
+import { migrateProgram } from '../utils/migrateProgram'
 
 const DEBOUNCE_MS = 2000
 const MAX_SYNC_INTERVAL_MS = 10000
@@ -49,7 +50,7 @@ export default function useSupabaseSync(user, program, setProgram, sessions, set
 
         if (error) throw error
 
-        if (data.program && Object.keys(data.program).length > 0) setProgram(data.program)
+        if (data.program && Object.keys(data.program).length > 0) setProgram(migrateProgram(data.program))
         if (data.sessions && Array.isArray(data.sessions)) setSessions(data.sessions)
         if (data.settings && Object.keys(data.settings).length > 0) setSettings(data.settings)
 

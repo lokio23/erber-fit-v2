@@ -43,6 +43,7 @@ export default function ProgressCharts() {
       <div className="px-4 space-y-4">
         <WeeklySummary sessions={sessions} />
         <MuscleGroupVolume sessions={sessions} />
+        <MuscleGroupTracker sessions={sessions} />
         <StrengthTrends sessions={sessions} unit={settings.unit} />
         <WeeklySetsTrend sessions={sessions} />
         <PersonalRecords sessions={sessions} unit={settings.unit} />
@@ -138,6 +139,94 @@ function MuscleGroupVolume({ sessions }) {
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400" /><span className="text-[9px] font-mono text-muted">&lt;10 Low</span></span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-accent" /><span className="text-[9px] font-mono text-muted">10-20 Optimal</span></span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-accent-secondary" /><span className="text-[9px] font-mono text-muted">&gt;20 High</span></span>
+      </div>
+    </div>
+  )
+}
+
+function MuscleGroupTracker({ sessions }) {
+  const weekLabels = useMemo(() => {
+    return [0, 1, 2, 3].map(w => {
+      const d = new Date()
+      d.setDate(d.getDate() - d.getDay() - w * 7)
+      return w === 0 ? 'This Wk' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    })
+  }, [])
+
+  const weeklyData = useMemo(() => {
+    return MUSCLE_GROUP_ORDER.map(muscle => {
+      const weeks = [0, 1, 2, 3].map(w => {
+        const setsMap = calcSetsPerMuscleGroup(sessions, EXERCISE_LIBRARY, w)
+        return setsMap[muscle] || 0
+      })
+      return { muscle, weeks }
+    })
+  }, [sessions])
+
+  const getStatusBadge = (sets) => {
+    if (sets === 0) return { label: '—', color: 'text-muted/30', bg: '' }
+    if (sets < 10) return { label: 'Low', color: 'text-red-400', bg: 'bg-red-400/10' }
+    if (sets <= 20) return { label: 'Good', color: 'text-accent', bg: 'bg-accent/10' }
+    return { label: 'High', color: 'text-accent-secondary', bg: 'bg-accent-secondary/10' }
+  }
+
+  const getCellColor = (sets) => {
+    if (sets === 0) return 'text-muted/20'
+    if (sets < 10) return 'text-red-400'
+    if (sets <= 20) return 'text-accent'
+    return 'text-accent-secondary'
+  }
+
+  const getCellBg = (sets) => {
+    if (sets === 0) return ''
+    if (sets < 10) return 'bg-red-400/5'
+    if (sets <= 20) return 'bg-accent/5'
+    return 'bg-accent-secondary/5'
+  }
+
+  return (
+    <div className="bg-card border border-border rounded-xl px-4 py-3.5">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-[10px] font-mono text-muted uppercase tracking-wider">Muscle Group Tracker</p>
+        <p className="text-[10px] font-mono text-muted">4-Week View</p>
+      </div>
+
+      {/* Header row */}
+      <div className="flex items-center gap-1 mb-1.5">
+        <div className="w-[72px] shrink-0" />
+        {weekLabels.map((label, i) => (
+          <div key={i} className={`flex-1 text-center text-[8px] font-mono uppercase tracking-wider ${i === 0 ? 'text-accent' : 'text-muted/50'}`}>
+            {label}
+          </div>
+        ))}
+        <div className="w-12 shrink-0 text-center text-[8px] font-mono text-muted/50 uppercase">Status</div>
+      </div>
+
+      {/* Muscle group rows */}
+      <div className="space-y-0.5">
+        {weeklyData.map(({ muscle, weeks }) => {
+          const status = getStatusBadge(weeks[0])
+          return (
+            <div key={muscle} className="flex items-center gap-1">
+              <p className="text-[10px] font-mono text-muted w-[72px] text-right shrink-0 truncate">{muscle}</p>
+              {weeks.map((sets, i) => (
+                <div key={i} className={`flex-1 text-center py-1 rounded ${getCellBg(sets)}`}>
+                  <span className={`text-xs font-mono font-medium ${getCellColor(sets)}`}>{sets || '·'}</span>
+                </div>
+              ))}
+              <div className={`w-12 shrink-0 text-center py-0.5 rounded-full text-[8px] font-mono ${status.color} ${status.bg}`}>
+                {status.label}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Legend */}
+      <div className="flex items-center justify-center gap-4 mt-3 pt-2 border-t border-border">
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400" /><span className="text-[9px] font-mono text-muted">&lt;10 Under MEV</span></span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-accent" /><span className="text-[9px] font-mono text-muted">10-20 Optimal</span></span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-accent-secondary" /><span className="text-[9px] font-mono text-muted">&gt;20 Near MRV</span></span>
       </div>
     </div>
   )
