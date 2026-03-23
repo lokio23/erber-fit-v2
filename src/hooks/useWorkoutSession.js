@@ -5,8 +5,41 @@ import { getTodayStr } from '../utils/calculations'
 
 const DAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
 
+const PROGRAM_VERSION = 2 // Bump when adding new default exercises
+
+// Migrate stored program to include any new default exercises/warmups
+function getInitialProgram() {
+  try {
+    const raw = localStorage.getItem('erberfit_program')
+    if (!raw) return DEFAULT_PROGRAM
+    const stored = JSON.parse(raw)
+    if (stored._version >= PROGRAM_VERSION) return stored
+    let changed = false
+    for (const dayKey of Object.keys(DEFAULT_PROGRAM)) {
+      const defaults = DEFAULT_PROGRAM[dayKey]
+      const current = stored[dayKey]
+      if (!current) continue
+      for (const ex of defaults.exercises) {
+        if (!current.exercises.find(e => e.id === ex.id)) {
+          current.exercises.push(ex)
+          changed = true
+        }
+      }
+      if (defaults.warmupExercises && !current.warmupExercises) {
+        current.warmupExercises = defaults.warmupExercises
+        changed = true
+      }
+    }
+    stored._version = PROGRAM_VERSION
+    if (changed) localStorage.setItem('erberfit_program', JSON.stringify(stored))
+    return stored
+  } catch {
+    return DEFAULT_PROGRAM
+  }
+}
+
 export default function useWorkoutSession() {
-  const [program, setProgram] = useLocalStorage('erberfit_program', DEFAULT_PROGRAM)
+  const [program, setProgram] = useLocalStorage('erberfit_program', getInitialProgram())
   const [sessions, setSessions] = useLocalStorage('erberfit_sessions', [])
   const [settings, setSettings] = useLocalStorage('erberfit_settings', {
     unit: 'lbs',
