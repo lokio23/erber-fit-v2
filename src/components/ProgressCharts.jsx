@@ -414,7 +414,7 @@ function PersonalRecords({ sessions, unit }) {
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-body font-medium text-text truncate">{rec.name}</p>
                 <p className="text-[10px] font-mono text-muted mt-0.5">
-                  {displayWeight(rec.weight, unit)} {unit} × {rec.reps} reps
+                  {rec.weight === 0 ? 'BW' : `${displayWeight(rec.weight, unit)} ${unit}`} × {rec.reps} reps
                   {rec.rpe && <span className="text-accent-secondary/70 ml-1">@ RPE {rec.rpe}</span>}
                 </p>
               </div>

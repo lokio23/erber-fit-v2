@@ -23,7 +23,7 @@ export default function SetLogger({
   const handleLog = () => {
     const w = Number(weight)
     const r = Number(reps)
-    if (!w || !r || w <= 0 || r <= 0) return
+    if (w < 0 || !r || r <= 0 || (weight === '' && !w)) return
     onLog(w, r, rpe)
   }
 
@@ -38,7 +38,7 @@ export default function SetLogger({
           {setNumber}
         </span>
         <span className="text-sm font-mono text-text flex-1">
-          {completedSet.weight} {unit} × {completedSet.reps}
+          {completedSet.weight === 0 ? 'BW' : `${completedSet.weight} ${unit}`} × {completedSet.reps}
         </span>
         {completedSet.rpe && (
           <span className="text-[10px] font-mono text-accent-secondary/80 bg-accent-secondary/10 px-1.5 py-0.5 rounded">
@@ -90,7 +90,7 @@ export default function SetLogger({
         </div>
         <button
           onClick={handleLog}
-          disabled={!weight || !reps}
+          disabled={weight === '' || !reps}
           className="p-2.5 rounded-md bg-accent/10 text-accent disabled:opacity-20 disabled:cursor-not-allowed hover:bg-accent/20 active:opacity-70 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
           aria-label="Log set"
         >
@@ -98,7 +98,7 @@ export default function SetLogger({
         </button>
       </div>
       {/* RPE selector */}
-      {weight && reps && (
+      {weight !== '' && reps && (
         <div className="flex items-center gap-1.5 pl-9">
           <span className="text-[9px] font-mono text-muted/50 uppercase tracking-wider mr-1">RPE</span>
           {RPE_OPTIONS.map(val => (
