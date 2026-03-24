@@ -8,23 +8,27 @@ export default function RestTimer({ seconds, onDone, onSkip }) {
   const [expanded, setExpanded] = useState(true)
   const intervalRef = useRef(null)
   const audioCtxRef = useRef(null)
+  const endTimeRef = useRef(Date.now() + seconds * 1000)
 
   useEffect(() => {
-    setTimeLeft(seconds)
-  }, [seconds])
+    endTimeRef.current = Date.now() + seconds * 1000
 
-  useEffect(() => {
-    intervalRef.current = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          clearInterval(intervalRef.current)
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
+    const tick = () => {
+      const remaining = Math.ceil((endTimeRef.current - Date.now()) / 1000)
+      setTimeLeft(remaining <= 0 ? 0 : remaining)
+    }
 
-    return () => clearInterval(intervalRef.current)
+    intervalRef.current = setInterval(tick, 1000)
+
+    const handleVisibility = () => {
+      if (!document.hidden) tick()
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+
+    return () => {
+      clearInterval(intervalRef.current)
+      document.removeEventListener('visibilitychange', handleVisibility)
+    }
   }, [seconds])
 
   useEffect(() => {
@@ -63,6 +67,7 @@ export default function RestTimer({ seconds, onDone, onSkip }) {
   }, [timeLeft, onDone, settings])
 
   const extend = useCallback((amt) => {
+    endTimeRef.current += amt * 1000
     setTimeLeft(prev => Math.max(0, prev + amt))
   }, [])
 
