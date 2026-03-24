@@ -124,7 +124,7 @@ function SessionRow({ session, expanded, onToggle, unit }) {
               <div className="space-y-0.5">
                 {ex.sets.map((set, i) => (
                   <p key={i} className="text-[11px] font-mono text-muted pl-2">
-                    Set {i + 1}: {displayWeight(set.weight, unit)} {unit} × {set.reps}
+                    Set {i + 1}: {set.weight === 0 ? 'BW' : `${displayWeight(set.weight, unit)} ${unit}`} × {set.reps}
                   </p>
                 ))}
                 {ex.sets.length === 0 && (
