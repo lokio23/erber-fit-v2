@@ -83,21 +83,41 @@ export default function useWorkoutSession() {
     setSessions(prev => prev.map(session => {
       if (session.id !== sessionId) return session
       const key = isWarmup ? 'warmupExercises' : 'exercises'
+      const exercises = session[key] || []
+      const found = exercises.some(ex => ex.exerciseId === exerciseId)
+
+      const newSet = {
+        weight: Number(weight),
+        reps: Number(reps),
+        rpe: rpe || null,
+        completed: true,
+        timestamp: new Date().toISOString(),
+      }
+
+      if (found) {
+        return {
+          ...session,
+          [key]: exercises.map(ex => {
+            if (ex.exerciseId !== exerciseId) return ex
+            return { ...ex, sets: [...ex.sets, newSet] }
+          }),
+        }
+      }
+
+      // Exercise was added to program after session started — add it to session
       return {
         ...session,
-        [key]: (session[key] || []).map(ex => {
-          if (ex.exerciseId !== exerciseId) return ex
-          return {
-            ...ex,
-            sets: [...ex.sets, {
-              weight: Number(weight),
-              reps: Number(reps),
-              rpe: rpe || null,
-              completed: true,
-              timestamp: new Date().toISOString(),
-            }],
-          }
-        }),
+        [key]: [...exercises, {
+          exerciseId,
+          name: exerciseId,
+          targetSets: 3,
+          targetRepsMin: 0,
+          targetRepsMax: 0,
+          restSeconds: 90,
+          isCompound: false,
+          sets: [newSet],
+          notes: '',
+        }],
       }
     }))
   }, [setSessions])
@@ -106,12 +126,33 @@ export default function useWorkoutSession() {
     setSessions(prev => prev.map(session => {
       if (session.id !== sessionId) return session
       const key = isWarmup ? 'warmupExercises' : 'exercises'
+      const exercises = session[key] || []
+      const found = exercises.some(ex => ex.exerciseId === exerciseId)
+
+      if (found) {
+        return {
+          ...session,
+          [key]: exercises.map(ex => {
+            if (ex.exerciseId !== exerciseId) return ex
+            return { ...ex, notes }
+          }),
+        }
+      }
+
+      // Exercise was added after session started
       return {
         ...session,
-        [key]: (session[key] || []).map(ex => {
-          if (ex.exerciseId !== exerciseId) return ex
-          return { ...ex, notes }
-        }),
+        [key]: [...exercises, {
+          exerciseId,
+          name: exerciseId,
+          targetSets: 3,
+          targetRepsMin: 0,
+          targetRepsMax: 0,
+          restSeconds: 90,
+          isCompound: false,
+          sets: [],
+          notes,
+        }],
       }
     }))
   }, [setSessions])
