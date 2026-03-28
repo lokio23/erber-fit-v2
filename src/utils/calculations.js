@@ -143,7 +143,9 @@ export function calcEstimated1RM(weight, reps) {
 
 export function getWeekStart(dateStr, weeksAgo = 0) {
   const d = new Date(dateStr + 'T12:00:00')
-  d.setDate(d.getDate() - d.getDay() - weeksAgo * 7)
+  // Week starts on Friday (day 5). Fri=0, Sat=1, Sun=2, Mon=3, Tue=4, Wed=5, Thu=6
+  const daysSinceFriday = (d.getDay() + 2) % 7
+  d.setDate(d.getDate() - daysSinceFriday - weeksAgo * 7)
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 

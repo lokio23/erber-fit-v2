@@ -148,7 +148,7 @@ function MuscleGroupTracker({ sessions }) {
   const weekLabels = useMemo(() => {
     return [0, 1, 2, 3].map(w => {
       const d = new Date()
-      d.setDate(d.getDate() - d.getDay() - w * 7)
+      d.setDate(d.getDate() - (d.getDay() + 2) % 7 - w * 7)
       return w === 0 ? 'This Wk' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     })
   }, [])
@@ -330,7 +330,7 @@ function WeeklySetsTrend({ sessions }) {
     for (let w = 7; w >= 0; w--) {
       const sets = calcWeeklyTotalSets(sessions, w)
       const weekDate = new Date()
-      weekDate.setDate(weekDate.getDate() - weekDate.getDay() - w * 7)
+      weekDate.setDate(weekDate.getDate() - (weekDate.getDay() + 2) % 7 - w * 7)
       data.push({
         week: weekDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         sets,
