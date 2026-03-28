@@ -54,9 +54,9 @@ export default function ExerciseCard({ exercise, sessionExercise, sessionId, onS
       const pastSessions = sessionId
         ? sessions.filter(s => s.id !== sessionId)
         : sessions
-      return getLastSessionSets(pastSessions, exercise.id)
+      return getLastSessionSets(pastSessions, exercise.id, exercise.name)
     },
-    [sessions, exercise.id, readOnly, isWarmup, sessionId]
+    [sessions, exercise.id, exercise.name, readOnly, isWarmup, sessionId]
   )
 
   const currentPR = useMemo(

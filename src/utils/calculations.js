@@ -82,9 +82,11 @@ export function getLastSessionWeight(sessions, exerciseId) {
   return null
 }
 
-export function getLastSessionSets(sessions, exerciseId) {
+export function getLastSessionSets(sessions, exerciseId, exerciseName) {
   for (let i = sessions.length - 1; i >= 0; i--) {
-    const ex = sessions[i].exercises.find(e => e.exerciseId === exerciseId)
+    const allExercises = [...(sessions[i].exercises || []), ...(sessions[i].warmupExercises || [])]
+    const ex = allExercises.find(e => e.exerciseId === exerciseId)
+      || (exerciseName && allExercises.find(e => e.name === exerciseName))
     if (!ex) continue
     const completedSets = ex.sets.filter(s => s.completed)
     if (completedSets.length > 0) {
