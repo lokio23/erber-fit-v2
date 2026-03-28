@@ -8,6 +8,7 @@ export default function SetLogger({
   targetRepsMin,
   targetRepsMax,
   lastWeight,
+  lastReps,
   completedSet,
   isPR,
   onLog,
@@ -15,7 +16,7 @@ export default function SetLogger({
   unit = 'lbs',
 }) {
   const [weight, setWeight] = useState(completedSet?.weight?.toString() || lastWeight?.toString() || '')
-  const [reps, setReps] = useState(completedSet?.reps?.toString() || '')
+  const [reps, setReps] = useState(completedSet?.reps?.toString() || lastReps?.toString() || '')
   const [rpe, setRpe] = useState(null)
 
   const isCompleted = !!completedSet

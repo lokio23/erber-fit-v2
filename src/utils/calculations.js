@@ -82,6 +82,18 @@ export function getLastSessionWeight(sessions, exerciseId) {
   return null
 }
 
+export function getLastSessionSets(sessions, exerciseId) {
+  for (let i = sessions.length - 1; i >= 0; i--) {
+    const ex = sessions[i].exercises.find(e => e.exerciseId === exerciseId)
+    if (!ex) continue
+    const completedSets = ex.sets.filter(s => s.completed)
+    if (completedSets.length > 0) {
+      return completedSets.map(s => ({ weight: s.weight, reps: s.reps }))
+    }
+  }
+  return []
+}
+
 export function getWeeksSinceDate(dateStr) {
   if (!dateStr) return Infinity
   const diff = Date.now() - new Date(dateStr).getTime()

@@ -3,7 +3,7 @@ import { MessageSquare } from 'lucide-react'
 import SetLogger from './SetLogger'
 import FormGuide from './FormGuide'
 import { useWorkout } from '../WorkoutContext'
-import { formatRepRange, formatRestTime, findPR, isWeightStagnant, getLastSessionWeight } from '../utils/calculations'
+import { formatRepRange, formatRestTime, findPR, isWeightStagnant, getLastSessionSets } from '../utils/calculations'
 
 let stylesInjected = false
 function injectAnimationStyles() {
@@ -47,8 +47,8 @@ export default function ExerciseCard({ exercise, sessionExercise, sessionId, onS
   const { sessions, settings, logSet, updateExerciseNotes, removeSet } = useWorkout()
   const [showNotes, setShowNotes] = useState(!!sessionExercise?.notes)
 
-  const lastWeight = useMemo(
-    () => (readOnly || isWarmup) ? null : getLastSessionWeight(sessions.slice(0, -1), exercise.id),
+  const lastSets = useMemo(
+    () => (readOnly || isWarmup) ? [] : getLastSessionSets(sessions.slice(0, -1), exercise.id),
     [sessions, exercise.id, readOnly, isWarmup]
   )
 
@@ -189,7 +189,8 @@ export default function ExerciseCard({ exercise, sessionExercise, sessionId, onS
                 setNumber={i + 1}
                 targetRepsMin={exercise.repsMin}
                 targetRepsMax={exercise.repsMax}
-                lastWeight={lastWeight}
+                lastWeight={lastSets[i]?.weight ?? null}
+                lastReps={lastSets[i]?.reps ?? null}
                 completedSet={completed}
                 isPR={completed ? isPRSet(completed) : false}
                 onLog={(weight, reps, rpe) => handleLogSet(weight, reps, rpe)}
