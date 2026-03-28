@@ -48,8 +48,15 @@ export default function ExerciseCard({ exercise, sessionExercise, sessionId, onS
   const [showNotes, setShowNotes] = useState(!!sessionExercise?.notes)
 
   const lastSets = useMemo(
-    () => (readOnly || isWarmup) ? [] : getLastSessionSets(sessions.slice(0, -1), exercise.id),
-    [sessions, exercise.id, readOnly, isWarmup]
+    () => {
+      if (readOnly || isWarmup) return []
+      // Exclude current session by ID, not by slicing last element
+      const pastSessions = sessionId
+        ? sessions.filter(s => s.id !== sessionId)
+        : sessions
+      return getLastSessionSets(pastSessions, exercise.id)
+    },
+    [sessions, exercise.id, readOnly, isWarmup, sessionId]
   )
 
   const currentPR = useMemo(
