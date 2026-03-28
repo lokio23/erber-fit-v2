@@ -164,10 +164,12 @@ export default function useWorkoutSession() {
     }))
   }, [setSessions])
 
-  const resumeSession = useCallback((sessionId) => {
+  const resumeSession = useCallback((sessionId, done = false) => {
     setSessions(prev => prev.map(session => {
       if (session.id !== sessionId) return session
-      return { ...session, completedAt: null }
+      if (done) return { ...session, resumed: false }
+      // Keep completedAt so the workout still counts as complete
+      return { ...session, resumed: true }
     }))
   }, [setSessions])
 

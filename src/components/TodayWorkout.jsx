@@ -226,7 +226,7 @@ export default function TodayWorkout({ onStartTimer }) {
           </div>
 
           {/* Workout Complete banner */}
-          {isToday && session?.completedAt && (
+          {isToday && session?.completedAt && !session.resumed && (
             <div className="mx-4 mb-3 px-4 py-4 rounded-xl border border-accent/30 flex items-center gap-3" style={{ background: 'linear-gradient(135deg, rgba(232,255,71,0.12), rgba(232,255,71,0.04), transparent)', boxShadow: '0 0 20px rgba(232,255,71,0.08), inset 0 1px 0 rgba(232,255,71,0.1)' }}>
               <Trophy size={20} className="text-accent shrink-0" style={{ filter: 'drop-shadow(0 0 8px rgba(232,255,71,0.7))' }} />
               <div className="flex-1">
@@ -262,7 +262,7 @@ export default function TodayWorkout({ onStartTimer }) {
                         sessionExercise={sessionEx}
                         sessionId={session.id}
                         onSetLogged={handleSetLogged}
-                        readOnly={!!session.completedAt}
+                        readOnly={!!session.completedAt && !session.resumed}
                         isWarmup
                       />
                     )
@@ -294,7 +294,7 @@ export default function TodayWorkout({ onStartTimer }) {
                     sessionExercise={sessionEx}
                     sessionId={session.id}
                     onSetLogged={handleSetLogged}
-                    readOnly={!!session.completedAt}
+                    readOnly={!!session.completedAt && !session.resumed}
                   />
                 )
               })}
@@ -308,6 +308,20 @@ export default function TodayWorkout({ onStartTimer }) {
                   readOnly
                 />
               ))}
+            </div>
+          )}
+
+          {/* Done button — when resumed, tap to go back to completed state */}
+          {isToday && session?.resumed && (
+            <div className="px-4 pt-4">
+              <button
+                onClick={() => resumeSession(session.id, true)}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-lg text-bg font-display text-lg tracking-wider active:scale-[0.98] transition-all"
+                style={{ background: 'linear-gradient(135deg, #c8e040, #e8ff47, #f0ff6a)', boxShadow: '0 0 24px rgba(232,255,71,0.35), 0 0 60px rgba(232,255,71,0.1), 0 4px 16px rgba(0,0,0,0.5)' }}
+              >
+                <CheckCircle2 size={18} />
+                DONE
+              </button>
             </div>
           )}
 
