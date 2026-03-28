@@ -414,6 +414,22 @@ function AddExercisePanel({ onAdd, onCancel, existingIds, dayKey, isWarmup }) {
         />
       </div>
       <div className="max-h-48 overflow-y-auto space-y-1">
+        <button
+          onClick={() => onAdd({
+            id: `custom_${Date.now()}`,
+            name: '(Blank)',
+            sets: 3,
+            repsMin: 10,
+            repsMax: 12,
+            restSeconds: 90,
+            isBuiltIn: false,
+            isCompound: false,
+          })}
+          className="w-full text-left px-3 py-2 rounded-lg border border-dashed border-accent/30 hover:bg-accent/5 active:opacity-70"
+        >
+          <p className="text-xs font-body text-accent">+ (Blank)</p>
+          <p className="text-[10px] font-mono text-muted">Type your own exercise</p>
+        </button>
         {filtered.map(ex => (
           <button
             key={ex.id}
