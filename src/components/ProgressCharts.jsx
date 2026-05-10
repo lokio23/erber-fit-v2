@@ -382,7 +382,7 @@ function PersonalRecords({ sessions, unit }) {
         return { ...ex, ...pr, e1rm, days }
       })
       .filter(Boolean)
-      .sort((a, b) => b.e1rm - a.e1rm)
+      .sort((a, b) => a.name.localeCompare(b.name))
   }, [sessions, allExercises])
 
   const getDaysColor = (days) => {
@@ -401,7 +401,7 @@ function PersonalRecords({ sessions, unit }) {
     <div className="bg-card border border-border rounded-xl px-4 py-3.5">
       <div className="flex items-center justify-between mb-3">
         <p className="text-[10px] font-mono text-muted uppercase tracking-wider">Personal Records</p>
-        <p className="text-[10px] font-mono text-muted">Sorted by Est. 1RM</p>
+        <p className="text-[10px] font-mono text-muted">A–Z</p>
       </div>
       {records.length > 0 ? (
         <div className="space-y-1.5">
