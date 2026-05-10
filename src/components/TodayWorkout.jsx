@@ -71,7 +71,7 @@ export default function TodayWorkout({ onStartTimer }) {
 
   const effectiveWarmups = workout.warmupExercises || []
 
-  const session = getTodaysSession()
+  const session = getTodaysSession(selectedWorkoutKey)
 
   const pastSession = useMemo(() => {
     if (isToday) return null
@@ -100,7 +100,7 @@ export default function TodayWorkout({ onStartTimer }) {
   const workoutOptions = useMemo(() => {
     const DAY_ORDER = ['friday', 'saturday', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday']
     const seen = new Set()
-    return DAY_ORDER
+    const ppls = DAY_ORDER
       .filter(k => program[k] && program[k].name !== 'REST')
       .filter(k => {
         if (seen.has(program[k].name)) return false
@@ -108,6 +108,8 @@ export default function TodayWorkout({ onStartTimer }) {
         return true
       })
       .map(k => ({ key: k, name: program[k].name, focus: program[k].focus }))
+    if (program.abs) ppls.push({ key: 'abs', name: 'ABS' })
+    return ppls
   }, [program])
 
   const handleStartWorkout = useCallback(() => {

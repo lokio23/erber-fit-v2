@@ -40,18 +40,21 @@ export default function useWorkoutSession() {
     return { dayKey, ...program[dayKey] }
   }, [program, getDayKey])
 
-  const getTodaysSession = useCallback(() => {
-    const dayKey = getDayKey()
+  const getTodaysSession = useCallback((workoutKey) => {
     const todayStr = getTodayStr()
-    const id = `${todayStr}_${dayKey}`
-    return sessions.find(s => s.id === id) || null
+    if (workoutKey === 'abs') {
+      return sessions.find(s => s.id === `${todayStr}_abs`) || null
+    }
+    const dayKey = getDayKey()
+    return sessions.find(s => s.id === `${todayStr}_${dayKey}`) || null
   }, [sessions, getDayKey])
 
   const startSession = useCallback((workoutDayKey) => {
     const calendarDayKey = getDayKey()
     const sourceDayKey = workoutDayKey || calendarDayKey
     const todayStr = getTodayStr()
-    const id = `${todayStr}_${calendarDayKey}`
+    const sessionKey = sourceDayKey === 'abs' ? 'abs' : calendarDayKey
+    const id = `${todayStr}_${sessionKey}`
     const workout = program[sourceDayKey]
 
     setSessions(prev => {
