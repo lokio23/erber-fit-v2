@@ -121,6 +121,18 @@ export const DEFAULT_PROGRAM = {
       { id: 'plank', name: 'Plank (weighted)', sets: 3, repsMin: 30, repsMax: 60, restSeconds: 60, isBuiltIn: true, isCompound: false, isCore: true },
     ],
   },
+  abs: {
+    name: 'ABS',
+    focus: 'Core',
+    muscleGroups: ['Core'],
+    warmupExercises: [],
+    exercises: [
+      { id: 'hanging_leg_raise', name: 'Hanging Leg Raise', sets: 3, repsMin: 10, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: false, isCore: true },
+      { id: 'ab_wheel', name: 'Ab Wheel Rollout', sets: 3, repsMin: 8, repsMax: 12, restSeconds: 60, isBuiltIn: true, isCompound: true, isCore: true },
+      { id: 'cable_crunch', name: 'Cable Crunch', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: false, isCore: true },
+      { id: 'russian_twist', name: 'Russian Twist', sets: 3, repsMin: 15, repsMax: 20, restSeconds: 60, isBuiltIn: true, isCompound: false, isCore: true },
+    ],
+  },
 }
 
 // Comprehensive exercise library organized by muscle group

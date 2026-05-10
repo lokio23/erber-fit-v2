@@ -1,6 +1,6 @@
 import { DEFAULT_PROGRAM } from '../data/workouts'
 
-const PROGRAM_VERSION = 4
+const PROGRAM_VERSION = 5
 
 // Migrate a program object to include any new default exercises/warmups/muscleGroups
 export function migrateProgram(prog) {
@@ -21,6 +21,10 @@ export function migrateProgram(prog) {
       current.muscleGroups = defaults.muscleGroups
     }
   }
+  if (!prog.abs) {
+    prog.abs = { ...DEFAULT_PROGRAM.abs }
+  }
+
   prog._version = PROGRAM_VERSION
   return prog
 }
