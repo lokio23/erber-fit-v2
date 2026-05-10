@@ -206,3 +206,62 @@ export function daysSince(dateStr) {
   const diff = Date.now() - new Date(dateStr + 'T12:00:00').getTime()
   return Math.floor(diff / MS_PER_DAY)
 }
+
+export function getLastSessionForDay(sessions, dayKey) {
+  for (let i = sessions.length - 1; i >= 0; i--) {
+    if (sessions[i].dayKey === dayKey && sessions[i].completedAt) {
+      return sessions[i]
+    }
+  }
+  return null
+}
+
+export function getLastSessionNotes(sessions, exerciseId, exerciseName) {
+  for (let i = sessions.length - 1; i >= 0; i--) {
+    const allEx = [...(sessions[i].exercises || []), ...(sessions[i].warmupExercises || [])]
+    const ex = allEx.find(e => e.exerciseId === exerciseId)
+      || (exerciseName && allEx.find(e => e.name === exerciseName))
+    if (ex?.notes) return ex.notes
+  }
+  return null
+}
+
+export function getProgressionRecommendation(
+  sessions, exerciseId, exerciseName, targetRepsMax, isCompound, unit = 'lbs'
+) {
+  let lastExercise = null
+  for (let i = sessions.length - 1; i >= 0; i--) {
+    const allEx = [...(sessions[i].exercises || []), ...(sessions[i].warmupExercises || [])]
+    const ex = allEx.find(e => e.exerciseId === exerciseId)
+      || (exerciseName && allEx.find(e => e.name === exerciseName))
+    if (!ex) continue
+    const completedSets = ex.sets.filter(s => s.completed)
+    if (completedSets.length > 0) { lastExercise = ex; break }
+  }
+
+  if (!lastExercise) {
+    return { shouldIncrease: false, suggestedWeight: null, currentWeight: null,
+             displaySuggested: null, displayCurrent: null, reason: 'no_data' }
+  }
+
+  const completedSets = lastExercise.sets.filter(s => s.completed)
+  const allHitRepMax = completedSets.length > 0 && completedSets.every(s => s.reps >= targetRepsMax)
+  const currentWeight = Math.max(...completedSets.map(s => s.weight))
+
+  if (!allHitRepMax) {
+    return {
+      shouldIncrease: false, suggestedWeight: null, currentWeight,
+      displaySuggested: null, displayCurrent: displayWeight(currentWeight, unit),
+      reason: 'keep_pushing',
+    }
+  }
+
+  const incrementLbs = isCompound ? 5 : 2.5
+  const suggestedWeight = currentWeight + incrementLbs
+  return {
+    shouldIncrease: true, suggestedWeight, currentWeight,
+    displaySuggested: displayWeight(suggestedWeight, unit),
+    displayCurrent: displayWeight(currentWeight, unit),
+    reason: 'increase',
+  }
+}

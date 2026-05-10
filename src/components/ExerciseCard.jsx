@@ -3,7 +3,7 @@ import { MessageSquare } from 'lucide-react'
 import SetLogger from './SetLogger'
 import FormGuide from './FormGuide'
 import { useWorkout } from '../WorkoutContext'
-import { formatRepRange, formatRestTime, findPR, isWeightStagnant, getLastSessionSets } from '../utils/calculations'
+import { formatRepRange, formatRestTime, findPR, isWeightStagnant, getLastSessionSets, getProgressionRecommendation, getLastSessionNotes } from '../utils/calculations'
 
 let stylesInjected = false
 function injectAnimationStyles() {
@@ -45,8 +45,6 @@ injectAnimationStyles()
 
 export default function ExerciseCard({ exercise, sessionExercise, sessionId, onSetLogged, readOnly, isWarmup }) {
   const { sessions, settings, logSet, updateExerciseNotes, removeSet } = useWorkout()
-  const [showNotes, setShowNotes] = useState(!!sessionExercise?.notes)
-
   const lastSets = useMemo(
     () => {
       if (readOnly || isWarmup) return []
@@ -68,6 +66,24 @@ export default function ExerciseCard({ exercise, sessionExercise, sessionId, onS
     () => (readOnly || isWarmup) ? false : isWeightStagnant(sessions, exercise.id),
     [sessions, exercise.id, readOnly, isWarmup]
   )
+
+  const progression = useMemo(() => {
+    if (readOnly || isWarmup) return null
+    const pastSessions = sessionId ? sessions.filter(s => s.id !== sessionId) : sessions
+    return getProgressionRecommendation(
+      pastSessions, exercise.id, exercise.name,
+      exercise.repsMax, exercise.isCompound, settings.unit,
+    )
+  }, [sessions, exercise.id, exercise.name, exercise.repsMax, exercise.isCompound,
+      settings.unit, readOnly, isWarmup, sessionId])
+
+  const lastNotes = useMemo(() => {
+    if (isWarmup) return null
+    const pastSessions = sessionId ? sessions.filter(s => s.id !== sessionId) : sessions
+    return getLastSessionNotes(pastSessions, exercise.id, exercise.name)
+  }, [sessions, exercise.id, exercise.name, isWarmup, sessionId])
+
+  const [showNotes, setShowNotes] = useState(!!(sessionExercise?.notes || false))
 
   const completedSets = sessionExercise?.sets || []
   const targetSets = exercise.sets
@@ -175,12 +191,21 @@ export default function ExerciseCard({ exercise, sessionExercise, sessionId, onS
         </div>
 
         {/* Progressive overload nudge */}
-        {!readOnly && needsOverload && !allSetsComplete && (
-          <div className="mt-2.5 px-2.5 py-1.5 rounded-md bg-accent/10 border border-accent/20">
-            <p className="text-[11px] font-mono text-accent">
-              Time to add weight
-            </p>
-          </div>
+        {!readOnly && !isWarmup && progression && !allSetsComplete && (
+          progression.reason === 'increase' ? (
+            <div className="mt-2.5 px-2.5 py-1.5 rounded-md bg-accent/10 border border-accent/20">
+              <p className="text-[11px] font-mono text-accent leading-snug">
+                Increase weight — try{' '}
+                <span className="font-bold">{progression.displaySuggested} {settings.unit}</span>
+              </p>
+            </div>
+          ) : progression.reason === 'keep_pushing' ? (
+            <div className="mt-2.5 px-2.5 py-1.5 rounded-md bg-bg border border-border/60">
+              <p className="text-[11px] font-mono text-muted leading-snug">
+                Hit {exercise.repsMax} reps on all sets to unlock next weight
+              </p>
+            </div>
+          ) : null
         )}
       </div>
 
@@ -198,6 +223,7 @@ export default function ExerciseCard({ exercise, sessionExercise, sessionId, onS
                 targetRepsMax={exercise.repsMax}
                 lastWeight={lastSets[i]?.weight ?? null}
                 lastReps={lastSets[i]?.reps ?? null}
+                suggestedWeight={progression?.reason === 'increase' ? progression.displaySuggested : null}
                 completedSet={completed}
                 isPR={completed ? isPRSet(completed) : false}
                 onLog={(weight, reps, rpe) => handleLogSet(weight, reps, rpe)}
@@ -217,9 +243,12 @@ export default function ExerciseCard({ exercise, sessionExercise, sessionId, onS
         {!readOnly && (
           <button
             onClick={() => setShowNotes(!showNotes)}
-            className={`p-1.5 rounded transition-colors ${showNotes ? 'text-accent' : 'text-muted hover:text-text'}`}
+            className={`relative p-1.5 rounded transition-colors ${showNotes ? 'text-accent' : 'text-muted hover:text-text'}`}
           >
             <MessageSquare size={14} />
+            {!showNotes && lastNotes && !sessionExercise?.notes && (
+              <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-accent/60" />
+            )}
           </button>
         )}
       </div>
@@ -227,7 +256,7 @@ export default function ExerciseCard({ exercise, sessionExercise, sessionId, onS
       {!readOnly && showNotes && (
         <div className="px-4 pb-4 -mt-2">
           <textarea
-            value={sessionExercise?.notes || ''}
+            value={sessionExercise?.notes || lastNotes || ''}
             onChange={e => updateExerciseNotes(sessionId, exercise.id, e.target.value, !!isWarmup)}
             placeholder="Add notes..."
             rows={2}
