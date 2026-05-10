@@ -4,7 +4,7 @@ import ExerciseCard from './ExerciseCard'
 import ProgramEditor from './ProgramEditor'
 import ConfirmDialog from './ConfirmDialog'
 import { useWorkout } from '../WorkoutContext'
-import { countCompletedSets, countTotalSets, getWeeksSinceDate, isDeloadActive, getDeloadSets, getTodayStr, formatDate } from '../utils/calculations'
+import { countCompletedSets, countTotalSets, getWeeksSinceDate, isDeloadActive, getDeloadSets, getTodayStr, formatDate, displayWeight, getLastSessionForDay } from '../utils/calculations'
 
 const DAYS = [
   { key: 'monday', short: 'MON' },
@@ -21,8 +21,29 @@ const DAY_LABELS = {
   thursday: 'THURSDAY', friday: 'FRIDAY', saturday: 'SATURDAY',
 }
 
+function PastExerciseBlock({ exercise, unit }) {
+  return (
+    <div className="bg-card border border-border rounded-xl px-4 py-3">
+      <p className="text-sm font-body font-medium text-text mb-2">{exercise.name}</p>
+      <div className="space-y-1">
+        {exercise.sets.length === 0 ? (
+          <p className="text-[11px] font-mono text-muted/50 pl-1">No sets logged</p>
+        ) : exercise.sets.map((set, i) => (
+          <p key={i} className="text-[11px] font-mono text-muted pl-1">
+            <span className="text-muted/50">Set {i + 1}{'  '}</span>
+            <span className="text-text/80">
+              {set.weight === 0 ? 'BW' : `${displayWeight(set.weight, unit)} ${unit}`} × {set.reps} reps
+            </span>
+            {set.rpe && <span className="text-muted/60"> · RPE {set.rpe}</span>}
+          </p>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function TodayWorkout({ onStartTimer }) {
-  const { program, sessions, settings, setSettings, getDayKey, getTodaysSession, startSession, completeSession, resumeSession, abortSession } = useWorkout()
+  const { program, sessions, settings, setSettings, getDayKey, getTodaysSession, startSession, completeSession, resumeSession, abortSession, skipDay } = useWorkout()
 
   const todayKey = getDayKey()
   const [selectedDay, setSelectedDay] = useState(todayKey)
@@ -50,6 +71,11 @@ export default function TodayWorkout({ onStartTimer }) {
   const effectiveWarmups = workout.warmupExercises || []
 
   const session = getTodaysSession()
+
+  const pastSession = useMemo(() => {
+    if (isToday) return null
+    return getLastSessionForDay(sessions, selectedDay)
+  }, [isToday, sessions, selectedDay])
 
   const showDeloadReminder = useMemo(() => {
     if (!isToday || !settings.deloadReminderEnabled || deloadActive) return false
@@ -151,6 +177,14 @@ export default function TodayWorkout({ onStartTimer }) {
           <p className="text-sm text-muted leading-relaxed max-w-xs">
             Recovery is when growth happens. Come back stronger{isToday ? ' tomorrow' : ''}.
           </p>
+          {isToday && (
+            <button
+              onClick={() => setConfirmAction({ type: 'skip' })}
+              className="mt-6 px-6 py-2 rounded-lg border border-border text-muted/60 text-xs font-mono uppercase tracking-wider hover:text-muted active:opacity-70 transition-colors"
+            >
+              Skip Day
+            </button>
+          )}
         </div>
       )}
 
@@ -159,9 +193,11 @@ export default function TodayWorkout({ onStartTimer }) {
         <>
           {/* Workout header */}
           <div className="px-5 pt-4 pb-3">
-            {/* Preview badge for non-today days */}
+            {/* Preview / Last logged badge for non-today days */}
             {!isToday && (
-              <p className="text-[10px] font-mono text-muted/50 uppercase tracking-widest mb-1">Preview</p>
+              <p className="text-[10px] font-mono text-muted/50 uppercase tracking-widest mb-1">
+                {pastSession ? `Last logged: ${formatDate(pastSession.date)}` : 'Preview'}
+              </p>
             )}
             <p className="text-[10px] font-mono text-muted uppercase tracking-widest mb-1">{DAY_LABELS[selectedDay]}</p>
             <div className="flex items-center justify-between">
@@ -215,13 +251,21 @@ export default function TodayWorkout({ onStartTimer }) {
 
             {/* Start workout button — today only, no session yet */}
             {isToday && !session && (
-              <button
-                onClick={handleStartWorkout}
-                className="mt-4 w-full py-3 rounded-lg text-bg font-display text-lg tracking-wider active:scale-[0.98] transition-all"
-                style={{ background: 'linear-gradient(135deg, #c8e040, #e8ff47, #f0ff6a)', boxShadow: '0 0 16px rgba(232,255,71,0.25), 0 4px 12px rgba(0,0,0,0.4)' }}
-              >
-                START WORKOUT
-              </button>
+              <>
+                <button
+                  onClick={handleStartWorkout}
+                  className="mt-4 w-full py-3 rounded-lg text-bg font-display text-lg tracking-wider active:scale-[0.98] transition-all"
+                  style={{ background: 'linear-gradient(135deg, #c8e040, #e8ff47, #f0ff6a)', boxShadow: '0 0 16px rgba(232,255,71,0.25), 0 4px 12px rgba(0,0,0,0.4)' }}
+                >
+                  START WORKOUT
+                </button>
+                <button
+                  onClick={() => setConfirmAction({ type: 'skip' })}
+                  className="mt-2 w-full py-2 rounded-lg border border-border text-muted/60 text-xs font-mono uppercase tracking-wider hover:text-muted active:opacity-70 transition-colors"
+                >
+                  Skip Day
+                </button>
+              </>
             )}
           </div>
 
@@ -245,7 +289,7 @@ export default function TodayWorkout({ onStartTimer }) {
           )}
 
           {/* Warm-up section */}
-          {effectiveWarmups.length > 0 && (
+          {(effectiveWarmups.length > 0 || (pastSession && (pastSession.warmupExercises || []).length > 0)) && (
             <div className="px-4 mb-2">
               <div className="flex items-center gap-2 mb-2 mt-1">
                 <span className="text-[10px] font-mono text-blue-400/80 uppercase tracking-widest">Warm-Up</span>
@@ -267,6 +311,10 @@ export default function TodayWorkout({ onStartTimer }) {
                       />
                     )
                   })
+                ) : pastSession && (pastSession.warmupExercises || []).length > 0 ? (
+                  (pastSession.warmupExercises).map(ex => (
+                    <PastExerciseBlock key={ex.exerciseId} exercise={ex} unit={settings.unit} />
+                  ))
                 ) : (
                   effectiveWarmups.map(exercise => (
                     <ExerciseCard key={exercise.id} exercise={exercise} readOnly isWarmup />
@@ -298,6 +346,12 @@ export default function TodayWorkout({ onStartTimer }) {
                   />
                 )
               })}
+            </div>
+          ) : pastSession ? (
+            <div className="px-4 space-y-3">
+              {pastSession.exercises.map(ex => (
+                <PastExerciseBlock key={ex.exerciseId} exercise={ex} unit={settings.unit} />
+              ))}
             </div>
           ) : (
             <div className="px-4 space-y-3">
@@ -366,7 +420,31 @@ export default function TodayWorkout({ onStartTimer }) {
               onCancel={() => setConfirmAction(null)}
             />
           )}
+          {confirmAction?.type === 'skip' && (
+            <ConfirmDialog
+              title="SKIP DAY"
+              message={
+                isRestDay
+                  ? "Today is already a rest day. Cascade your schedule forward anyway? This permanently shifts your weekly order."
+                  : "Skip today and cascade forward? Your entire weekly schedule shifts one day permanently."
+              }
+              confirmLabel="Skip"
+              onConfirm={() => { skipDay(selectedDay); setConfirmAction(null) }}
+              onCancel={() => setConfirmAction(null)}
+            />
+          )}
         </>
+      )}
+
+      {/* Skip confirm dialog for rest days (rendered outside !isRestDay block) */}
+      {isRestDay && confirmAction?.type === 'skip' && (
+        <ConfirmDialog
+          title="SKIP DAY"
+          message="Today is already a rest day. Cascade your schedule forward anyway? This permanently shifts your weekly order."
+          confirmLabel="Skip"
+          onConfirm={() => { skipDay(selectedDay); setConfirmAction(null) }}
+          onCancel={() => setConfirmAction(null)}
+        />
       )}
     </div>
   )

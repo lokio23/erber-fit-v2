@@ -9,13 +9,14 @@ export default function SetLogger({
   targetRepsMax,
   lastWeight,
   lastReps,
+  suggestedWeight = null,
   completedSet,
   isPR,
   onLog,
   onRemove,
   unit = 'lbs',
 }) {
-  const [weight, setWeight] = useState(completedSet?.weight?.toString() || lastWeight?.toString() || '')
+  const [weight, setWeight] = useState(completedSet?.weight?.toString() || suggestedWeight?.toString() || lastWeight?.toString() || '')
   const [reps, setReps] = useState(completedSet?.reps?.toString() || lastReps?.toString() || '')
   const [rpe, setRpe] = useState(null)
 
@@ -70,7 +71,7 @@ export default function SetLogger({
             type="number"
             inputMode="decimal"
             enterKeyHint="next"
-            placeholder={lastWeight ? String(lastWeight) : unit}
+            placeholder={suggestedWeight ? String(suggestedWeight) : lastWeight ? String(lastWeight) : unit}
             value={weight}
             onChange={e => setWeight(e.target.value)}
             aria-label={`Weight in ${unit}`}
