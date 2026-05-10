@@ -1,14 +1,16 @@
 import { useRef, useState } from 'react'
-import { Download, Upload, Volume2, VolumeX, Smartphone, Zap, LogOut, Cloud, CloudOff, RefreshCw, WifiOff } from 'lucide-react'
+import { Download, Upload, Volume2, VolumeX, Smartphone, Zap, LogOut, Cloud, CloudOff, RefreshCw, WifiOff, RotateCcw } from 'lucide-react'
 import { useWorkout } from '../WorkoutContext'
 import { supabase } from '../lib/supabase'
 import { getWeeksSinceDate, isDeloadActive, getTodayStr, formatDate } from '../utils/calculations'
+import { DEFAULT_PROGRAM } from '../data/workouts'
 import ConfirmDialog from './ConfirmDialog'
 
 export default function Settings() {
   const { settings, setSettings, program, sessions, setProgram, setSessions, user, signIn, signOut, syncStatus } = useWorkout()
   const fileInputRef = useRef(null)
   const [showDeloadConfirm, setShowDeloadConfirm] = useState(false)
+  const [showResetConfirm, setShowResetConfirm] = useState(false)
 
   const deloadActive = isDeloadActive(settings)
   const weeksSinceDeload = getWeeksSinceDate(settings.lastDeloadDate || sessions[0]?.date)
@@ -255,6 +257,16 @@ export default function Settings() {
               </div>
             </button>
             <input ref={fileInputRef} type="file" accept=".json" onChange={handleImport} className="hidden" />
+            <button
+              onClick={() => setShowResetConfirm(true)}
+              className="w-full flex items-center gap-3 bg-card border border-border rounded-xl px-4 py-3.5 hover:border-accent-secondary/30 transition-colors"
+            >
+              <RotateCcw size={16} className="text-accent-secondary" />
+              <div className="text-left">
+                <p className="text-sm font-body font-medium text-text">Reset Program Schedule</p>
+                <p className="text-xs font-mono text-muted mt-0.5">Restore the default PPL workout schedule</p>
+              </div>
+            </button>
           </div>
         </div>
 
@@ -264,6 +276,16 @@ export default function Settings() {
           <p className="text-[10px] font-mono text-muted/40 mt-1">v1.0.0</p>
         </div>
       </div>
+
+      {showResetConfirm && (
+        <ConfirmDialog
+          title="RESET SCHEDULE"
+          message="This will restore the default Push/Pull/Legs schedule. Your workout history won't be affected."
+          confirmLabel="Reset"
+          onConfirm={() => { setProgram(DEFAULT_PROGRAM); setShowResetConfirm(false) }}
+          onCancel={() => setShowResetConfirm(false)}
+        />
+      )}
 
       {showDeloadConfirm && (
         <ConfirmDialog
