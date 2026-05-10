@@ -6,8 +6,6 @@ import { migrateProgram } from '../utils/migrateProgram'
 
 const DAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
 
-const REST_DAY_TEMPLATE = { name: 'REST', focus: '', muscleGroups: [], exercises: [], warmupExercises: [] }
-
 function getInitialProgram() {
   try {
     const raw = localStorage.getItem('erberfit_program')
@@ -49,11 +47,12 @@ export default function useWorkoutSession() {
     return sessions.find(s => s.id === id) || null
   }, [sessions, getDayKey])
 
-  const startSession = useCallback(() => {
-    const dayKey = getDayKey()
+  const startSession = useCallback((workoutDayKey) => {
+    const calendarDayKey = getDayKey()
+    const sourceDayKey = workoutDayKey || calendarDayKey
     const todayStr = getTodayStr()
-    const id = `${todayStr}_${dayKey}`
-    const workout = program[dayKey]
+    const id = `${todayStr}_${calendarDayKey}`
+    const workout = program[sourceDayKey]
 
     setSessions(prev => {
       if (prev.find(s => s.id === id)) return prev
@@ -71,7 +70,7 @@ export default function useWorkoutSession() {
       return [...prev, {
         id,
         date: todayStr,
-        dayKey,
+        dayKey: calendarDayKey,
         workoutName: workout.name,
         warmupExercises: (workout.warmupExercises || []).map(ex => ({ ...mapExercise(ex), isWarmup: true })),
         exercises: workout.exercises.map(mapExercise),
@@ -196,20 +195,6 @@ export default function useWorkoutSession() {
     }))
   }, [setSessions])
 
-  const skipDay = useCallback((dayKey) => {
-    setProgram(prev => {
-      const startIdx = DAY_NAMES.indexOf(dayKey)
-      const rotation = Array.from({ length: 7 }, (_, i) => DAY_NAMES[(startIdx + i) % 7])
-      const snapshots = rotation.map(k => prev[k])
-      const next = { ...prev }
-      next[rotation[0]] = { ...REST_DAY_TEMPLATE }
-      for (let i = 1; i < 7; i++) {
-        next[rotation[i]] = { ...snapshots[i - 1] }
-      }
-      return next
-    })
-  }, [setProgram])
-
   return {
     program,
     setProgram,
@@ -227,6 +212,5 @@ export default function useWorkoutSession() {
     resumeSession,
     abortSession,
     removeSet,
-    skipDay,
   }
 }
