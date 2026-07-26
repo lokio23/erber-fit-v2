@@ -88,27 +88,28 @@ export default function useWorkoutSession() {
     })
   }, [program, setSessions, getDayKey])
 
-  const logSet = useCallback((sessionId, exerciseId, weight, reps, rpe, isWarmup = false) => {
+  // Append one or more completed sets to an exercise within a session.
+  const logSets = useCallback((sessionId, exerciseId, newSets, isWarmup = false) => {
     setSessions(prev => prev.map(session => {
       if (session.id !== sessionId) return session
       const key = isWarmup ? 'warmupExercises' : 'exercises'
       const exercises = session[key] || []
       const found = exercises.some(ex => ex.exerciseId === exerciseId)
 
-      const newSet = {
-        weight: Number(weight),
-        reps: Number(reps),
-        rpe: rpe || null,
+      const stamped = newSets.map(s => ({
+        weight: Number(s.weight),
+        reps: Number(s.reps),
+        rpe: s.rpe || null,
         completed: true,
         timestamp: new Date().toISOString(),
-      }
+      }))
 
       if (found) {
         return {
           ...session,
           [key]: exercises.map(ex => {
             if (ex.exerciseId !== exerciseId) return ex
-            return { ...ex, sets: [...ex.sets, newSet] }
+            return { ...ex, sets: [...ex.sets, ...stamped] }
           }),
         }
       }
@@ -119,14 +120,31 @@ export default function useWorkoutSession() {
         [key]: [...exercises, {
           exerciseId,
           name: exerciseId,
-          targetSets: 3,
+          targetSets: stamped.length,
           targetRepsMin: 0,
           targetRepsMax: 0,
           restSeconds: 90,
           isCompound: false,
-          sets: [newSet],
+          sets: stamped,
           notes: '',
         }],
+      }
+    }))
+  }, [setSessions])
+
+  const logSet = useCallback((sessionId, exerciseId, weight, reps, rpe, isWarmup = false) => {
+    logSets(sessionId, exerciseId, [{ weight, reps, rpe }], isWarmup)
+  }, [logSets])
+
+  const clearSets = useCallback((sessionId, exerciseId, isWarmup = false) => {
+    setSessions(prev => prev.map(session => {
+      if (session.id !== sessionId) return session
+      const key = isWarmup ? 'warmupExercises' : 'exercises'
+      return {
+        ...session,
+        [key]: (session[key] || []).map(ex => (
+          ex.exerciseId === exerciseId ? { ...ex, sets: [] } : ex
+        )),
       }
     }))
   }, [setSessions])
@@ -215,6 +233,8 @@ export default function useWorkoutSession() {
     getTodaysSession,
     startSession,
     logSet,
+    logSets,
+    clearSets,
     updateExerciseNotes,
     completeSession,
     resumeSession,

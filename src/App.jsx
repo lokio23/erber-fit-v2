@@ -19,17 +19,16 @@ const TABS = [
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('today')
-  const [timerSeconds, setTimerSeconds] = useState(0)
-  const [timerActive, setTimerActive] = useState(false)
+  // runId increments on every start so logging two sets with the same rest
+  // period still restarts the countdown — the duration alone doesn't change.
+  const [timer, setTimer] = useState({ seconds: 0, runId: 0, active: false })
 
   const handleStartTimer = useCallback((seconds) => {
-    setTimerSeconds(seconds)
-    setTimerActive(true)
+    setTimer(prev => ({ seconds, runId: prev.runId + 1, active: true }))
   }, [])
 
   const handleTimerDone = useCallback(() => {
-    setTimerActive(false)
-    setTimerSeconds(0)
+    setTimer(prev => ({ ...prev, active: false, seconds: 0 }))
   }, [])
 
   return (
@@ -60,9 +59,10 @@ export default function App() {
         </ErrorBoundary>
 
         {/* Rest timer floating pill */}
-        {timerActive && (
+        {timer.active && (
           <RestTimer
-            seconds={timerSeconds}
+            seconds={timer.seconds}
+            runId={timer.runId}
             onDone={handleTimerDone}
             onSkip={handleTimerDone}
           />

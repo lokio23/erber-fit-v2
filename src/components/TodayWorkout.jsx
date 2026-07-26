@@ -133,7 +133,14 @@ export default function TodayWorkout({ onStartTimer }) {
 
   return (
     <div className="pb-6">
-      {editing && <ProgramEditor dayKey={selectedDay} onClose={() => setEditing(false)} />}
+      {/* Edit the workout that's on screen, which is not the calendar day when
+          today's workout was picked from the list (or is ABS). */}
+      {editing && (
+        <ProgramEditor
+          dayKey={isToday ? (selectedWorkoutKey || selectedDay) : selectedDay}
+          onClose={() => setEditing(false)}
+        />
+      )}
 
       {/* Day tabs */}
       <div className="flex items-center justify-between px-3 pt-3 pb-1 border-b border-border">
