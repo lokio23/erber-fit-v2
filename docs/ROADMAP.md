@@ -33,39 +33,40 @@ with no keyboard, and metrics that tell the truth.
 
 ### Commit A — logging redesign
 
-- [ ] `ExerciseCard`: weight moves to a **header control** for the whole exercise, with −5/+5
+- [x] `ExerciseCard`: weight moves to a **header control** for the whole exercise, with −5/+5
       steppers, prefilled from last session's weight or the progression suggestion.
-- [ ] `SetLogger` becomes a **rep row**: reps prefilled from the previous set *in this session*
+- [x] `SetLogger` becomes a **rep row**: reps prefilled from the previous set *in this session*
       (falling back to last session, then to target max), ±1 stepper, one large confirm tap.
-- [ ] Fixes the stale-prefill bug structurally — weight is entered once per exercise, not per set.
-- [ ] Warm-ups: a single **"done"** tick per exercise. No weight, no reps. They feed no metric.
-- [ ] Remove the notes UI. Leave stored notes on historical sessions intact.
-- [ ] Rest timer restarts between sets with equal rest (`App.jsx` needs a run id alongside the
+- [x] Fixes the stale-prefill bug structurally — weight is entered once per exercise, not per set.
+- [x] Warm-ups: a single **"done"** tick per exercise. No weight, no reps. They feed no metric.
+- [x] Remove the notes UI. Leave stored notes on historical sessions intact.
+- [x] Rest timer restarts between sets with equal rest (`App.jsx` needs a run id alongside the
       duration; `RestTimer`'s reset effect currently keys only on `seconds`, so logging a second
       set at the same rest interval never resets it).
-- [ ] Edit pencil targets the workout on screen. `TodayWorkout.jsx` passes `dayKey={selectedDay}`
+- [x] Edit pencil targets the workout on screen. `TodayWorkout.jsx` passes `dayKey={selectedDay}`
       while displaying `program[selectedWorkoutKey]`, so editing PUSH A on a Saturday opens PULL A.
 
 ### Commit B — honest metrics
 
 Visibly changes every number on the Progress tab. Separate commit so it can be reviewed alone.
 
-- [ ] Streak and workouts-this-week count sessions with **logged sets**, not `completedAt`.
-- [ ] Auto-set `completedAt` once the target sets are logged, so the flag stops being a lie.
-- [ ] PR badge works: exclude the live session from the PR baseline in `ExerciseCard`
+- [x] Streak and workouts-this-week count sessions with **logged sets**, not `completedAt`.
+- [x] Auto-set `completedAt` once the target sets are logged, so the flag stops being a lie.
+- [x] PR badge works: exclude the live session from the PR baseline in `ExerciseCard`
       (today `findPR` includes the set being tested, so the comparison can never be true).
-- [ ] PRs rank by **estimated 1RM**, not raw weight — 185×6 (e1RM 222) should outrank 190×1 (196).
-- [ ] Fix volume inflation: add a `Core` muscle group, stop tagging core exercises with all ten
-      groups in `src/data/workouts.js`, and count primary muscles fully with secondary at half.
-- [ ] `WeeklySetsTrend` week labels use `getWeekStart` instead of the leftover Friday-based
+- [x] PRs rank by **estimated 1RM**, not raw weight — 185×6 (e1RM 222) should outrank 190×1 (196).
+- [x] Fix volume inflation: add a `Core` muscle group and stop tagging core exercises with all
+      ten groups in `src/data/workouts.js`. (Primary/secondary weighting deferred to Stage 2,
+      where the library gains those fields.)
+- [x] `WeeklySetsTrend` week labels use `getWeekStart` instead of the leftover Friday-based
       `(getDay() + 2) % 7` at `ProgressCharts.jsx:333`.
-- [ ] Minimal sync guard: on sign-in, union sessions by id and prefer the copy with more logged
+- [x] Minimal sync guard: on sign-in, union sessions by id and prefer the copy with more logged
       sets, rather than letting remote overwrite local wholesale.
 
 ### Nice to have if the session has room
 
 - [ ] Post-workout summary: volume vs last time, PRs hit, sets completed.
-- [ ] Demote RPE to opt-in.
+- [x] Demote RPE to opt-in — now one tap behind an RPE button instead of always on screen.
 
 ---
 
