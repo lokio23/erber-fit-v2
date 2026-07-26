@@ -21,7 +21,9 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(() => {})
+          // Relative path: the app is served from a sub-path (/erber-fit-v2/ on
+          // GitHub Pages), so '/sw.js' 404s and the worker never installs.
+          navigator.serviceWorker.register('./sw.js').catch(() => {})
         })
       }
     </script>
