@@ -70,7 +70,33 @@ Visibly changes every number on the Progress tab. Separate commit so it can be r
 
 ---
 
+## Stage 1.5 — Evidence alignment (from `PROGRAM-AUDIT.md`)
+
+- [x] Program revised: leg extension on both leg days, core 24 → 6 sets/week, leg press
+      dropped, lying → seated leg curl, seated → standing calf raise at 10 sets/week,
+      all 60s rests → 90s. 141 → 125 sets/week, max 9 → 7 exercises per session.
+- [x] `migrateProgram` rewritten — immutable, per-day `removedIds` tombstones so deletions
+      stick, declarative revision specs so a migration can change rests and remove
+      exercises (not just add them), and new defaults inserted in order.
+- [x] `useLocalStorage` takes a `transform`, so migration runs once on load rather than
+      on every render.
+- [x] Volume zones reframed as efficiency, not safety; per-muscle bands (Core 4–12).
+- [x] Deload autoregulated via `isProgressStalled` instead of a 6-week timer.
+- [ ] **Stretch-position cues in the form guides.** Range of motion at long muscle lengths
+      was the largest measured effect in the whole review — calves +15.2% vs +6.7%, biceps
+      +8.9% vs +3.4%, hamstrings +14% vs +9% — and it's a cueing change, not a programming
+      one. Form guides currently cover ~20 of ~110 exercises. Highest-value content work
+      in the app.
+
+---
+
 ## Stage 2 — Exercise variety
+
+Note from the audit: exercise variation produced **no hypertrophy benefit** in two RCTs
+(Baz-Valle 2019; Kassiano 2025) but did improve intrinsic motivation. So this stage is
+justified by **adherence**, which is the actual problem — not by extra growth. Don't rotate
+so much that load progression is lost.
+
 
 Separate session. Depends on the library schema change, which touches every exercise definition.
 
