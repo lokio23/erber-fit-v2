@@ -4,7 +4,7 @@ import ExerciseCard from './ExerciseCard'
 import ProgramEditor from './ProgramEditor'
 import ConfirmDialog from './ConfirmDialog'
 import { useWorkout } from '../WorkoutContext'
-import { countCompletedSets, countTotalSets, getWeeksSinceDate, isDeloadActive, getDeloadSets, getTodayStr, formatDate, displayWeight, getLastSessionForDay } from '../utils/calculations'
+import { countCompletedSets, countTotalSets, getWeeksSinceDate, isDeloadActive, getDeloadSets, getTodayStr, formatDate, displayWeight, getLastSessionForDay, isProgressStalled } from '../utils/calculations'
 
 const DAYS = [
   { key: 'monday', short: 'MON' },
@@ -89,11 +89,13 @@ export default function TodayWorkout({ onStartTimer }) {
     return getLastSessionForDay(sessions, selectedDay)
   }, [isToday, sessions, selectedDay])
 
+  // Triggered by stalled progress rather than a 6-week timer, with a long calendar
+  // backstop. See docs/PROGRAM-AUDIT.md — scheduled deloads are neutral for hypertrophy.
   const showDeloadReminder = useMemo(() => {
     if (!isToday || !settings.deloadReminderEnabled || deloadActive) return false
-    const firstDate = sessions[0]?.date
-    const ref = settings.lastDeloadDate || firstDate
-    return getWeeksSinceDate(ref) >= 6
+    const weeksSince = getWeeksSinceDate(settings.lastDeloadDate || sessions[0]?.date)
+    if (weeksSince < 3) return false
+    return isProgressStalled(sessions) || weeksSince >= 12
   }, [settings, sessions, isToday, deloadActive])
 
   const totalSets = useMemo(
@@ -187,8 +189,8 @@ export default function TodayWorkout({ onStartTimer }) {
         <div className="mx-4 mt-3 px-4 py-3 rounded-xl bg-accent-secondary/10 border border-accent-secondary/20 flex items-start gap-3">
           <AlertTriangle size={16} className="text-accent-secondary shrink-0 mt-0.5" />
           <div className="flex-1">
-            <p className="text-xs font-body font-medium text-accent-secondary">Deload recommended</p>
-            <p className="text-[11px] font-mono text-muted mt-0.5">Cut volume 50% this week — you'll come back stronger.</p>
+            <p className="text-xs font-body font-medium text-accent-secondary">Progress has stalled</p>
+            <p className="text-[11px] font-mono text-muted mt-0.5">Your best sets haven't improved lately. A lighter week may help.</p>
           </div>
           <button
             onClick={() => {

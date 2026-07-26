@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { Download, Upload, Volume2, VolumeX, Smartphone, Zap, LogOut, Cloud, CloudOff, RefreshCw, WifiOff, RotateCcw } from 'lucide-react'
 import { useWorkout } from '../WorkoutContext'
 import { supabase } from '../lib/supabase'
-import { getWeeksSinceDate, isDeloadActive, getTodayStr, formatDate } from '../utils/calculations'
+import { isDeloadActive, isProgressStalled, getTodayStr, formatDate } from '../utils/calculations'
 import { DEFAULT_PROGRAM } from '../data/workouts'
 import ConfirmDialog from './ConfirmDialog'
 
@@ -13,8 +13,7 @@ export default function Settings() {
   const [showResetConfirm, setShowResetConfirm] = useState(false)
 
   const deloadActive = isDeloadActive(settings)
-  const weeksSinceDeload = getWeeksSinceDate(settings.lastDeloadDate || sessions[0]?.date)
-  const nextDeloadWeeks = Math.max(0, 6 - weeksSinceDeload)
+  const progressStalled = isProgressStalled(sessions)
 
   const handleExport = () => {
     const data = {
@@ -182,9 +181,9 @@ export default function Settings() {
                   <p className="text-sm font-body font-medium text-text">Deload Week</p>
                   <p className="text-xs font-mono text-muted mt-0.5">
                     {settings.deloadReminderEnabled
-                      ? nextDeloadWeeks <= 0
-                        ? 'Deload recommended now'
-                        : `Auto-reminder in ~${nextDeloadWeeks} week${nextDeloadWeeks !== 1 ? 's' : ''}`
+                      ? progressStalled
+                        ? 'Suggested — your best sets have stopped improving'
+                        : 'Suggested when progress stalls, not on a timer'
                       : 'Halve sets for a recovery week'
                     }
                   </p>

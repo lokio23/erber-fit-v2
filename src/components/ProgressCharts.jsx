@@ -19,6 +19,27 @@ const TOOLTIP_STYLE = {
 
 const MUSCLE_GROUP_ORDER = ['Chest', 'Back', 'Shoulders', 'Quads', 'Hamstrings', 'Glutes', 'Biceps', 'Triceps', 'Rear Delts', 'Calves', 'Core']
 
+// Framed as efficiency, not safety. The MEV/MAV/MRV framework has no peer-reviewed
+// validation, and the best current dose-response meta-regression (Pelland et al.)
+// found diminishing returns with NO inverted-U — more sets never became harmful, just
+// progressively less productive. So "above the band" means low return, not danger.
+// Core gets a lower band: it is a smaller muscle group with less to gain from volume.
+const DEFAULT_SET_BAND = { min: 10, high: 20 }
+const SET_BANDS = { Core: { min: 4, high: 12 } }
+const bandFor = (muscle) => SET_BANDS[muscle] || DEFAULT_SET_BAND
+
+function zoneOf(muscle, sets) {
+  if (sets === 0) return 'none'
+  const { min, high } = bandFor(muscle)
+  if (sets < min) return 'below'
+  if (sets <= high) return 'effective'
+  return 'diminishing'
+}
+
+const ZONE_TEXT = { none: 'text-muted/30', below: 'text-red-400', effective: 'text-accent', diminishing: 'text-accent-secondary' }
+const ZONE_FILL = { none: '#222527', below: '#ef4444', effective: '#e8ff47', diminishing: '#ff6b35' }
+const ZONE_LABEL = { none: '—', below: 'Low', effective: 'Good', diminishing: 'Plateau' }
+
 export default function ProgressCharts() {
   const { sessions, program, settings } = useWorkout()
 
@@ -90,20 +111,6 @@ function MuscleGroupVolume({ sessions }) {
     })).filter(d => d.sets > 0 || MUSCLE_GROUP_ORDER.indexOf(d.muscle) < 6) // Always show top 6
   }, [sessions])
 
-  const getBarColor = (sets) => {
-    if (sets === 0) return '#222527'
-    if (sets < 10) return '#ef4444' // red — below MEV
-    if (sets <= 20) return '#e8ff47' // accent green — optimal
-    return '#ff6b35' // orange — approaching MRV
-  }
-
-  const getZoneLabel = (sets) => {
-    if (sets === 0) return ''
-    if (sets < 10) return 'Low'
-    if (sets <= 20) return 'Optimal'
-    return 'High'
-  }
-
   return (
     <div className="bg-card border border-border rounded-xl px-4 py-3.5">
       <div className="flex items-center justify-between mb-3">
@@ -111,35 +118,41 @@ function MuscleGroupVolume({ sessions }) {
         <p className="text-[10px] font-mono text-muted">This Week</p>
       </div>
       <div className="space-y-2">
-        {muscleData.map(({ muscle, sets }) => (
-          <div key={muscle} className="flex items-center gap-2">
-            <p className="text-[10px] font-mono text-muted w-20 text-right shrink-0">{muscle}</p>
-            <div className="flex-1 h-5 bg-bg rounded-full overflow-hidden relative">
-              <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{
-                  width: `${Math.min((sets / 25) * 100, 100)}%`,
-                  backgroundColor: getBarColor(sets),
-                  minWidth: sets > 0 ? '8px' : '0',
-                }}
-              />
-              {/* 10-set and 20-set reference lines */}
-              <div className="absolute top-0 bottom-0 left-[40%] w-px bg-muted/20" />
-              <div className="absolute top-0 bottom-0 left-[80%] w-px bg-muted/20" />
+        {muscleData.map(({ muscle, sets }) => {
+          const band = bandFor(muscle)
+          const zone = zoneOf(muscle, sets)
+          const scale = band.high * 1.25
+          return (
+            <div key={muscle} className="flex items-center gap-2">
+              <p className="text-[10px] font-mono text-muted w-20 text-right shrink-0">{muscle}</p>
+              <div className="flex-1 h-5 bg-bg rounded-full overflow-hidden relative">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: `${Math.min((sets / scale) * 100, 100)}%`,
+                    backgroundColor: ZONE_FILL[zone],
+                    minWidth: sets > 0 ? '8px' : '0',
+                  }}
+                />
+                {/* Band edges for this muscle */}
+                <div className="absolute top-0 bottom-0 w-px bg-muted/20" style={{ left: `${(band.min / scale) * 100}%` }} />
+                <div className="absolute top-0 bottom-0 w-px bg-muted/20" style={{ left: `${(band.high / scale) * 100}%` }} />
+              </div>
+              <p className={`text-xs font-mono w-8 text-right shrink-0 ${ZONE_TEXT[zone]}`}>
+                {sets}
+              </p>
             </div>
-            <p className={`text-xs font-mono w-8 text-right shrink-0 ${
-              sets === 0 ? 'text-muted/30' : sets < 10 ? 'text-red-400' : sets <= 20 ? 'text-accent' : 'text-accent-secondary'
-            }`}>
-              {sets}
-            </p>
-          </div>
-        ))}
+          )
+        })}
       </div>
-      <div className="flex items-center justify-center gap-4 mt-3 pt-2 border-t border-border">
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400" /><span className="text-[9px] font-mono text-muted">&lt;10 Low</span></span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-accent" /><span className="text-[9px] font-mono text-muted">10-20 Optimal</span></span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-accent-secondary" /><span className="text-[9px] font-mono text-muted">&gt;20 High</span></span>
+      <div className="flex items-center justify-center gap-3 mt-3 pt-2 border-t border-border">
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400" /><span className="text-[9px] font-mono text-muted">Below range</span></span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-accent" /><span className="text-[9px] font-mono text-muted">Efficient</span></span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-accent-secondary" /><span className="text-[9px] font-mono text-muted">Diminishing returns</span></span>
       </div>
+      <p className="text-[9px] font-mono text-muted/40 text-center mt-1.5 leading-snug">
+        More sets keep adding growth, just less per set — above the range is low return, not harmful.
+      </p>
     </div>
   )
 }
@@ -163,26 +176,8 @@ function MuscleGroupTracker({ sessions }) {
     })
   }, [sessions])
 
-  const getStatusBadge = (sets) => {
-    if (sets === 0) return { label: '—', color: 'text-muted/30', bg: '' }
-    if (sets < 10) return { label: 'Low', color: 'text-red-400', bg: 'bg-red-400/10' }
-    if (sets <= 20) return { label: 'Good', color: 'text-accent', bg: 'bg-accent/10' }
-    return { label: 'High', color: 'text-accent-secondary', bg: 'bg-accent-secondary/10' }
-  }
-
-  const getCellColor = (sets) => {
-    if (sets === 0) return 'text-muted/20'
-    if (sets < 10) return 'text-red-400'
-    if (sets <= 20) return 'text-accent'
-    return 'text-accent-secondary'
-  }
-
-  const getCellBg = (sets) => {
-    if (sets === 0) return ''
-    if (sets < 10) return 'bg-red-400/5'
-    if (sets <= 20) return 'bg-accent/5'
-    return 'bg-accent-secondary/5'
-  }
+  const ZONE_BG = { none: '', below: 'bg-red-400/5', effective: 'bg-accent/5', diminishing: 'bg-accent-secondary/5' }
+  const ZONE_BADGE_BG = { none: '', below: 'bg-red-400/10', effective: 'bg-accent/10', diminishing: 'bg-accent-secondary/10' }
 
   return (
     <div className="bg-card border border-border rounded-xl px-4 py-3.5">
@@ -205,17 +200,20 @@ function MuscleGroupTracker({ sessions }) {
       {/* Muscle group rows */}
       <div className="space-y-0.5">
         {weeklyData.map(({ muscle, weeks }) => {
-          const status = getStatusBadge(weeks[0])
+          const currentZone = zoneOf(muscle, weeks[0])
           return (
             <div key={muscle} className="flex items-center gap-1">
               <p className="text-[10px] font-mono text-muted w-[72px] text-right shrink-0 truncate">{muscle}</p>
-              {weeks.map((sets, i) => (
-                <div key={i} className={`flex-1 text-center py-1 rounded ${getCellBg(sets)}`}>
-                  <span className={`text-xs font-mono font-medium ${getCellColor(sets)}`}>{sets || '·'}</span>
-                </div>
-              ))}
-              <div className={`w-12 shrink-0 text-center py-0.5 rounded-full text-[8px] font-mono ${status.color} ${status.bg}`}>
-                {status.label}
+              {weeks.map((sets, i) => {
+                const zone = zoneOf(muscle, sets)
+                return (
+                  <div key={i} className={`flex-1 text-center py-1 rounded ${ZONE_BG[zone]}`}>
+                    <span className={`text-xs font-mono font-medium ${ZONE_TEXT[zone]}`}>{sets || '·'}</span>
+                  </div>
+                )
+              })}
+              <div className={`w-12 shrink-0 text-center py-0.5 rounded-full text-[8px] font-mono ${ZONE_TEXT[currentZone]} ${ZONE_BADGE_BG[currentZone]}`}>
+                {ZONE_LABEL[currentZone]}
               </div>
             </div>
           )
@@ -223,10 +221,10 @@ function MuscleGroupTracker({ sessions }) {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center justify-center gap-4 mt-3 pt-2 border-t border-border">
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400" /><span className="text-[9px] font-mono text-muted">&lt;10 Under MEV</span></span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-accent" /><span className="text-[9px] font-mono text-muted">10-20 Optimal</span></span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-accent-secondary" /><span className="text-[9px] font-mono text-muted">&gt;20 Near MRV</span></span>
+      <div className="flex items-center justify-center gap-3 mt-3 pt-2 border-t border-border">
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400" /><span className="text-[9px] font-mono text-muted">Below range</span></span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-accent" /><span className="text-[9px] font-mono text-muted">Efficient</span></span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-accent-secondary" /><span className="text-[9px] font-mono text-muted">Diminishing</span></span>
       </div>
     </div>
   )

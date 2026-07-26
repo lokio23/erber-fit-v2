@@ -109,6 +109,42 @@ export function getWeeksSinceDate(dateStr) {
   return Math.floor(diff / MS_PER_WEEK)
 }
 
+// Scheduled deloads have no measured hypertrophy benefit — both trials that tested
+// them found neutral results, and full cessation cost strength (Coleman et al. 2024,
+// PeerJ; Pancar et al. 2026, Sci Rep). So suggest one when training actually stops
+// producing better sets, rather than on a calendar interval.
+//
+// "Stalled" = across the last `window` sessions that had logged sets, fewer than a
+// quarter of the exercises you also trained in the previous `window` sessions improved
+// their best estimated 1RM.
+export function isProgressStalled(sessions, window = 3) {
+  const trained = sessions.filter(s => countCompletedSets(s) > 0)
+  if (trained.length < window * 2) return false
+
+  const bestPerExercise = (group) => {
+    const best = {}
+    for (const session of group) {
+      for (const ex of session.exercises || []) {
+        for (const set of ex.sets) {
+          if (!set.completed) continue
+          const e1rm = calcEstimated1RM(set.weight, set.reps)
+          if (e1rm > (best[ex.exerciseId] || 0)) best[ex.exerciseId] = e1rm
+        }
+      }
+    }
+    return best
+  }
+
+  const recent = bestPerExercise(trained.slice(-window))
+  const prior = bestPerExercise(trained.slice(-window * 2, -window))
+  const shared = Object.keys(recent).filter(id => prior[id] > 0)
+  // Too little overlap to judge — different workouts, not a stall.
+  if (shared.length < 3) return false
+
+  const improved = shared.filter(id => recent[id] > prior[id]).length
+  return improved / shared.length < 0.25
+}
+
 export function isDeloadActive(settings) {
   if (!settings.deloadActiveUntil) return false
   return new Date(settings.deloadActiveUntil) >= new Date(getTodayStr())
