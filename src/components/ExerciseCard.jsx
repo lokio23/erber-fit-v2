@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useRef } from 'react'
 import { Minus, Plus, Check, RotateCcw } from 'lucide-react'
 import SetLogger from './SetLogger'
 import FormGuide from './FormGuide'
+import { getLoadNote } from '../data/loadConventions'
 import { useWorkout } from '../WorkoutContext'
 import { formatRepRange, formatRestTime, findPR, getLastSessionSets, getProgressionRecommendation, calcEstimated1RM } from '../utils/calculations'
 
@@ -76,6 +77,7 @@ export default function ExerciseCard({ exercise, sessionExercise, sessionId, onS
 
   const completedSets = sessionExercise?.sets || []
   const targetSets = exercise.sets
+  const loadNote = getLoadNote(exercise)
 
   // Straight sets: one weight for the whole exercise. Suggested progression wins,
   // otherwise repeat last session's weight.
@@ -300,8 +302,14 @@ export default function ExerciseCard({ exercise, sessionExercise, sessionId, onS
               </button>
             </div>
 
+            {loadNote && (
+              <p className="text-[10px] font-mono text-muted/40 mt-1.5 pl-1 leading-snug">
+                {loadNote}
+              </p>
+            )}
+
             {lastSets.length > 0 && (
-              <p className="text-[10px] font-mono text-muted/50 mt-1.5 pl-1">
+              <p className="text-[10px] font-mono text-muted/50 mt-1 pl-1">
                 Last: {lastSets[0].weight === 0 ? 'BW' : `${fmtWeight(lastSets[0].weight)} ${settings.unit}`}
                 {' · '}{lastSets.map(s => s.reps).join(', ')} reps
               </p>
