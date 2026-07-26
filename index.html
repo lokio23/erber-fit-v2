@@ -19,12 +19,22 @@
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
     <script>
-      if ('serviceWorker' in navigator) {
+      // Production only. In dev, Vite serves modules at stable URLs whose contents
+      // change on every edit, so the worker's cache-first asset strategy would pin
+      // the page to stale JS and make hot reloading silently useless.
+      var isLocal = ['localhost', '127.0.0.1', '::1'].indexOf(location.hostname) !== -1
+      if ('serviceWorker' in navigator && !isLocal) {
         window.addEventListener('load', () => {
           // Relative path: the app is served from a sub-path (/erber-fit-v2/ on
           // GitHub Pages), so '/sw.js' 404s and the worker never installs.
           navigator.serviceWorker.register('./sw.js').catch(() => {})
         })
+      } else if ('serviceWorker' in navigator && isLocal) {
+        // Clean up any worker registered before this guard existed.
+        navigator.serviceWorker.getRegistrations()
+          .then((regs) => regs.forEach((r) => r.unregister()))
+          .catch(() => {})
+        if (window.caches) caches.keys().then((keys) => keys.forEach((k) => caches.delete(k))).catch(() => {})
       }
     </script>
   </body>
