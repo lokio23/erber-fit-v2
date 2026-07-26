@@ -42,11 +42,15 @@ export default function useWorkoutSession() {
 
   const getTodaysSession = useCallback((workoutKey) => {
     const todayStr = getTodayStr()
+    if (!workoutKey) return null
     if (workoutKey === 'abs') {
       return sessions.find(s => s.id === `${todayStr}_abs`) || null
     }
     const dayKey = getDayKey()
-    return sessions.find(s => s.id === `${todayStr}_${dayKey}`) || null
+    return sessions.find(s =>
+      s.date === todayStr &&
+      (s.workoutKey === workoutKey || (!s.workoutKey && s.id === `${todayStr}_${dayKey}`))
+    ) || null
   }, [sessions, getDayKey])
 
   const startSession = useCallback((workoutDayKey) => {
@@ -74,6 +78,7 @@ export default function useWorkoutSession() {
         id,
         date: todayStr,
         dayKey: calendarDayKey,
+        workoutKey: sourceDayKey,
         workoutName: workout.name,
         warmupExercises: (workout.warmupExercises || []).map(ex => ({ ...mapExercise(ex), isWarmup: true })),
         exercises: workout.exercises.map(mapExercise),

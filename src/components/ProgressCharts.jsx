@@ -148,7 +148,7 @@ function MuscleGroupTracker({ sessions }) {
   const weekLabels = useMemo(() => {
     return [0, 1, 2, 3].map(w => {
       const d = new Date()
-      d.setDate(d.getDate() - (d.getDay() + 2) % 7 - w * 7)
+      d.setDate(d.getDate() - (d.getDay() + 6) % 7 - w * 7)
       return w === 0 ? 'This Wk' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     })
   }, [])

@@ -47,13 +47,15 @@ export default function TodayWorkout({ onStartTimer }) {
 
   const todayKey = getDayKey()
   const [selectedDay, setSelectedDay] = useState(todayKey)
-  const [selectedWorkoutKey, setSelectedWorkoutKey] = useState(todayKey)
+  const [selectedWorkoutKey, setSelectedWorkoutKey] = useState(null)
   const [editing, setEditing] = useState(false)
   const [confirmAction, setConfirmAction] = useState(null)
 
   const isToday = selectedDay === todayKey
-  const workout = isToday ? program[selectedWorkoutKey] : program[selectedDay]
-  const isRestDay = workout.exercises.length === 0
+  const workout = isToday
+    ? (selectedWorkoutKey ? program[selectedWorkoutKey] : null)
+    : program[selectedDay]
+  const isRestDay = !!workout && workout.exercises.length === 0
   const deloadActive = isDeloadActive(settings)
 
   // Auto-expire deload week
@@ -63,13 +65,22 @@ export default function TodayWorkout({ onStartTimer }) {
     }
   }, [deloadActive, settings.deloadActiveUntil, setSettings])
 
+  // Restore selectedWorkoutKey from any existing today session (handles reload/reopen)
+  useEffect(() => {
+    if (selectedWorkoutKey) return
+    const todayStr = getTodayStr()
+    const existing = sessions.find(s => s.date === todayStr && s.workoutKey && s.id !== `${todayStr}_abs`)
+    if (existing) setSelectedWorkoutKey(existing.workoutKey)
+  }, [sessions, selectedWorkoutKey])
+
   // Apply deload: halve sets when active (warm-ups unaffected)
   const effectiveExercises = useMemo(() => {
+    if (!workout) return []
     if (!deloadActive) return workout.exercises
     return workout.exercises.map(ex => ({ ...ex, sets: getDeloadSets(ex.sets) }))
-  }, [workout.exercises, deloadActive])
+  }, [workout, deloadActive])
 
-  const effectiveWarmups = workout.warmupExercises || []
+  const effectiveWarmups = workout?.warmupExercises || []
 
   const session = getTodaysSession(selectedWorkoutKey)
 
@@ -210,32 +221,44 @@ export default function TodayWorkout({ onStartTimer }) {
             <p className="text-[10px] font-mono text-muted uppercase tracking-widest mb-1">{DAY_LABELS[selectedDay]}</p>
             <div className="flex items-center justify-between">
               <div className="flex items-baseline gap-3">
-                <h2 className="font-display text-3xl tracking-wider text-text">
-                  {workout.name}
-                </h2>
-                <span className="text-xs font-mono text-muted uppercase tracking-wider">
-                  {workout.focus}
-                </span>
+                {workout ? (
+                  <>
+                    <h2 className="font-display text-3xl tracking-wider text-text">
+                      {workout.name}
+                    </h2>
+                    <span className="text-xs font-mono text-muted uppercase tracking-wider">
+                      {workout.focus}
+                    </span>
+                  </>
+                ) : (
+                  <h2 className="font-display text-3xl tracking-wider text-muted/40">
+                    SELECT WORKOUT
+                  </h2>
+                )}
               </div>
-              <button
-                onClick={() => setEditing(true)}
-                className="p-2 text-muted hover:text-accent transition-colors"
-              >
-                <Pencil size={16} />
-              </button>
+              {workout && (
+                <button
+                  onClick={() => setEditing(true)}
+                  className="p-2 text-muted hover:text-accent transition-colors"
+                >
+                  <Pencil size={16} />
+                </button>
+              )}
             </div>
 
             {/* Muscle group pills */}
-            <div className="flex gap-1.5 mt-2">
-              {workout.muscleGroups.map(group => (
-                <span
-                  key={group}
-                  className="text-[10px] font-mono uppercase tracking-wider text-accent/80 bg-accent/8 border border-accent/15 px-2 py-0.5 rounded-full"
-                >
-                  {group}
-                </span>
-              ))}
-            </div>
+            {workout && (
+              <div className="flex gap-1.5 mt-2">
+                {workout.muscleGroups.map(group => (
+                  <span
+                    key={group}
+                    className="text-[10px] font-mono uppercase tracking-wider text-accent/80 bg-accent/8 border border-accent/15 px-2 py-0.5 rounded-full"
+                  >
+                    {group}
+                  </span>
+                ))}
+              </div>
+            )}
 
             {/* Progress bar — today only, with active session */}
             {isToday && session && (
@@ -282,8 +305,9 @@ export default function TodayWorkout({ onStartTimer }) {
                 )}
                 <button
                   onClick={handleStartWorkout}
-                  className="mt-4 w-full py-3 rounded-lg text-bg font-display text-lg tracking-wider active:scale-[0.98] transition-all"
-                  style={{ background: 'linear-gradient(135deg, #c8e040, #e8ff47, #f0ff6a)', boxShadow: '0 0 16px rgba(232,255,71,0.25), 0 4px 12px rgba(0,0,0,0.4)' }}
+                  disabled={!selectedWorkoutKey}
+                  className={`mt-4 w-full py-3 rounded-lg text-bg font-display text-lg tracking-wider transition-all ${selectedWorkoutKey ? 'active:scale-[0.98]' : 'opacity-40 cursor-not-allowed'}`}
+                  style={{ background: 'linear-gradient(135deg, #c8e040, #e8ff47, #f0ff6a)', boxShadow: selectedWorkoutKey ? '0 0 16px rgba(232,255,71,0.25), 0 4px 12px rgba(0,0,0,0.4)' : 'none' }}
                 >
                   START WORKOUT
                 </button>
