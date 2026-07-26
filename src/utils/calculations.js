@@ -30,7 +30,7 @@ export function calcExerciseVolume(exercise) {
 }
 
 export function countCompletedSets(session) {
-  return session.exercises.reduce((total, ex) => {
+  return (session.exercises || []).reduce((total, ex) => {
     return total + ex.sets.filter(s => s.completed).length
   }, 0)
 }
@@ -39,14 +39,21 @@ export function countTotalSets(exercises) {
   return exercises.reduce((total, ex) => total + ex.sets, 0)
 }
 
+// Best set by estimated 1RM, not raw weight: 185x6 (e1RM 222) is a better lift
+// than 190x1 (e1RM 196), and e1RM is what the Progress tab reports.
 export function findPR(sessions, exerciseId) {
   let best = null
+  let bestScore = -1
   for (const session of sessions) {
-    const ex = session.exercises.find(e => e.exerciseId === exerciseId)
+    const ex = (session.exercises || []).find(e => e.exerciseId === exerciseId)
     if (!ex) continue
     for (const set of ex.sets) {
       if (!set.completed) continue
-      if (!best || set.weight > best.weight || (set.weight === best.weight && set.reps > best.reps)) {
+      const score = calcEstimated1RM(set.weight, set.reps)
+      // Bodyweight sets score 0, so fall back to reps to keep them comparable.
+      const tie = score === bestScore && set.reps > (best?.reps ?? 0)
+      if (score > bestScore || tie) {
+        bestScore = score
         best = { weight: set.weight, reps: set.reps, rpe: set.rpe || null, date: session.date }
       }
     }
@@ -185,17 +192,23 @@ export function calcWeeklyTotalSets(sessions, weeksAgo = 0) {
   return weekSessions.reduce((total, s) => total + countCompletedSets(s), 0)
 }
 
+// A session counts as trained if any set was logged. Keying off completedAt
+// undercounted badly — only 8 of the first 25 sessions ever had it set, because
+// COMPLETE WORKOUT rarely gets tapped on the way out of the gym.
+export function isTrained(session) {
+  return countCompletedSets(session) > 0
+}
+
 export function calcWorkoutsThisWeek(sessions) {
-  return getSessionsInWeek(sessions, 0).filter(s => s.completedAt).length
+  return getSessionsInWeek(sessions, 0).filter(isTrained).length
 }
 
 export function calcStreak(sessions) {
   if (sessions.length === 0) return 0
   let streak = 0
   for (let w = 0; w < MAX_STREAK_WEEKS; w++) {
-    const weekSessions = getSessionsInWeek(sessions, w)
-    const completed = weekSessions.filter(s => s.completedAt).length
-    if (completed >= STREAK_MIN_WORKOUTS) streak++
+    const trained = getSessionsInWeek(sessions, w).filter(isTrained).length
+    if (trained >= STREAK_MIN_WORKOUTS) streak++
     else break
   }
   return streak

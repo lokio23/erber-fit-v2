@@ -6,7 +6,7 @@ import { EXERCISE_LIBRARY } from '../data/workouts'
 import {
   findPR, displayWeight, formatDate, calcEstimated1RM,
   calcSetsPerMuscleGroup, calcWeeklyTotalSets, calcWorkoutsThisWeek,
-  calcStreak, daysSince, countCompletedSets,
+  calcStreak, daysSince, getWeekStart, getTodayStr,
 } from '../utils/calculations'
 
 const TOOLTIP_STYLE = {
@@ -17,7 +17,7 @@ const TOOLTIP_STYLE = {
   fontFamily: 'DM Mono',
 }
 
-const MUSCLE_GROUP_ORDER = ['Chest', 'Back', 'Shoulders', 'Quads', 'Hamstrings', 'Glutes', 'Biceps', 'Triceps', 'Rear Delts', 'Calves']
+const MUSCLE_GROUP_ORDER = ['Chest', 'Back', 'Shoulders', 'Quads', 'Hamstrings', 'Glutes', 'Biceps', 'Triceps', 'Rear Delts', 'Calves', 'Core']
 
 export default function ProgressCharts() {
   const { sessions, program, settings } = useWorkout()
@@ -147,9 +147,9 @@ function MuscleGroupVolume({ sessions }) {
 function MuscleGroupTracker({ sessions }) {
   const weekLabels = useMemo(() => {
     return [0, 1, 2, 3].map(w => {
-      const d = new Date()
-      d.setDate(d.getDate() - (d.getDay() + 6) % 7 - w * 7)
-      return w === 0 ? 'This Wk' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      if (w === 0) return 'This Wk'
+      const d = new Date(getWeekStart(getTodayStr(), w) + 'T12:00:00')
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     })
   }, [])
 
@@ -329,8 +329,7 @@ function WeeklySetsTrend({ sessions }) {
     const data = []
     for (let w = 7; w >= 0; w--) {
       const sets = calcWeeklyTotalSets(sessions, w)
-      const weekDate = new Date()
-      weekDate.setDate(weekDate.getDate() - (weekDate.getDay() + 2) % 7 - w * 7)
+      const weekDate = new Date(getWeekStart(getTodayStr(), w) + 'T12:00:00')
       data.push({
         week: weekDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         sets,

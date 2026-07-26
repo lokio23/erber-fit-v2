@@ -3,7 +3,7 @@ import { Minus, Plus, Check, RotateCcw } from 'lucide-react'
 import SetLogger from './SetLogger'
 import FormGuide from './FormGuide'
 import { useWorkout } from '../WorkoutContext'
-import { formatRepRange, formatRestTime, findPR, getLastSessionSets, getProgressionRecommendation } from '../utils/calculations'
+import { formatRepRange, formatRestTime, findPR, getLastSessionSets, getProgressionRecommendation, calcEstimated1RM } from '../utils/calculations'
 
 let stylesInjected = false
 function injectAnimationStyles() {
@@ -58,9 +58,11 @@ export default function ExerciseCard({ exercise, sessionExercise, sessionId, onS
     [pastSessions, exercise.id, exercise.name, readOnly, isWarmup]
   )
 
+  // Baseline excludes the live session — comparing a set against a PR that
+  // already includes that set made the PR badge unreachable.
   const currentPR = useMemo(
-    () => (readOnly || isWarmup) ? null : findPR(sessions, exercise.id),
-    [sessions, exercise.id, readOnly, isWarmup]
+    () => (readOnly || isWarmup) ? null : findPR(pastSessions, exercise.id),
+    [pastSessions, exercise.id, readOnly, isWarmup]
   )
 
   const progression = useMemo(() => {
@@ -126,7 +128,7 @@ export default function ExerciseCard({ exercise, sessionExercise, sessionId, onS
 
   const isPRSet = (set) => {
     if (!currentPR) return false
-    return set.weight > currentPR.weight || (set.weight === currentPR.weight && set.reps > currentPR.reps)
+    return calcEstimated1RM(set.weight, set.reps) > calcEstimated1RM(currentPR.weight, currentPR.reps)
   }
 
   // Reps carry forward from the previous set of this exercise, then from last

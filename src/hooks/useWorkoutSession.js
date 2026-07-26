@@ -6,6 +6,18 @@ import { migrateProgram } from '../utils/migrateProgram'
 
 const DAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
 
+// Stamp completedAt once every target set is logged, so finishing a workout
+// doesn't depend on remembering to tap COMPLETE WORKOUT on the way out.
+function withAutoCompletion(session) {
+  if (session.completedAt) return session
+  const exercises = session.exercises || []
+  if (exercises.length === 0) return session
+  const target = exercises.reduce((t, ex) => t + (ex.targetSets || 0), 0)
+  const logged = exercises.reduce((t, ex) => t + ex.sets.filter(s => s.completed).length, 0)
+  if (target === 0 || logged < target) return session
+  return { ...session, completedAt: new Date().toISOString() }
+}
+
 function getInitialProgram() {
   try {
     const raw = localStorage.getItem('erberfit_program')
@@ -105,13 +117,14 @@ export default function useWorkoutSession() {
       }))
 
       if (found) {
-        return {
+        const updated = {
           ...session,
           [key]: exercises.map(ex => {
             if (ex.exerciseId !== exerciseId) return ex
             return { ...ex, sets: [...ex.sets, ...stamped] }
           }),
         }
+        return isWarmup ? updated : withAutoCompletion(updated)
       }
 
       // Exercise was added to program after session started — add it to session

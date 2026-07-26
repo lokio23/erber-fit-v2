@@ -341,8 +341,11 @@ function AddExercisePanel({ onAdd, onCancel, existingIds, dayKey, isWarmup }) {
       return EXERCISE_LIBRARY.filter(ex => ex.isWarmup)
     }
     const dayMuscles = program[dayKey]?.muscleGroups || []
+    // Core work is offered on every day. It used to be tagged with all ten
+    // muscle groups to achieve that, which made it count toward all ten in the
+    // volume math; the isCore flag keeps it visible without that side effect.
     return EXERCISE_LIBRARY.filter(ex =>
-      !ex.isWarmup && ex.muscleGroups.some(g => dayMuscles.includes(g))
+      !ex.isWarmup && (ex.isCore || ex.muscleGroups.some(g => dayMuscles.includes(g)))
     )
   }, [dayKey, program, isWarmup])
 
