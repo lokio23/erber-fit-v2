@@ -92,10 +92,18 @@ Visibly changes every number on the Progress tab. Separate commit so it can be r
 
 ## Stage 2 — Exercise variety
 
+**Designed in detail in [VARIATION-DESIGN.md](VARIATION-DESIGN.md) — read that first.**
+Deliberately parked until a few real sessions are logged on the Stage 1 flow, since that flow
+was built around an untested estimate of in-gym interaction cost.
+
 Note from the audit: exercise variation produced **no hypertrophy benefit** in two RCTs
 (Baz-Valle 2019; Kassiano 2025) but did improve intrinsic motivation. So this stage is
 justified by **adherence**, which is the actual problem — not by extra growth. Don't rotate
 so much that load progression is lost.
+
+The hard constraint: a swap feature that can offer a *worse* exercise is worse than none. If
+"leg press" were offered as a substitute for "leg extension," it would silently undo the
+rectus femoris work added in Stage 1.5.
 
 
 Separate session. Depends on the library schema change, which touches every exercise definition.
