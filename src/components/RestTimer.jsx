@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { X, Plus, Minus, Timer } from 'lucide-react'
 import { useWorkout } from '../WorkoutContext'
 
-export default function RestTimer({ seconds, onDone, onSkip }) {
+export default function RestTimer({ seconds, runId, onDone, onSkip }) {
   const { settings } = useWorkout()
   const [timeLeft, setTimeLeft] = useState(seconds)
   const [expanded, setExpanded] = useState(true)
@@ -12,6 +12,7 @@ export default function RestTimer({ seconds, onDone, onSkip }) {
 
   useEffect(() => {
     endTimeRef.current = Date.now() + seconds * 1000
+    setTimeLeft(seconds)
 
     const tick = () => {
       const remaining = Math.ceil((endTimeRef.current - Date.now()) / 1000)
@@ -29,7 +30,7 @@ export default function RestTimer({ seconds, onDone, onSkip }) {
       clearInterval(intervalRef.current)
       document.removeEventListener('visibilitychange', handleVisibility)
     }
-  }, [seconds])
+  }, [seconds, runId])
 
   useEffect(() => {
     if (timeLeft !== 0) return

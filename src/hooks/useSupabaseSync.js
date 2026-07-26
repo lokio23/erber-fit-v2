@@ -5,6 +5,25 @@ import { migrateProgram } from '../utils/migrateProgram'
 const DEBOUNCE_MS = 2000
 const MAX_SYNC_INTERVAL_MS = 10000
 
+const loggedSetCount = (session) =>
+  [...(session.exercises || []), ...(session.warmupExercises || [])]
+    .reduce((t, ex) => t + (ex.sets || []).filter(s => s.completed).length, 0)
+
+// Union local and remote sessions by id rather than letting remote win outright.
+// A straight overwrite silently discarded anything logged on this device while
+// signed out; where both sides have the same session, keep the fuller one.
+function mergeSessions(localSessions, remoteSessions) {
+  const byId = new Map()
+  for (const session of remoteSessions || []) byId.set(session.id, session)
+  for (const session of localSessions || []) {
+    const remote = byId.get(session.id)
+    if (!remote || loggedSetCount(session) > loggedSetCount(remote)) {
+      byId.set(session.id, session)
+    }
+  }
+  return [...byId.values()].sort((a, b) => a.date.localeCompare(b.date))
+}
+
 export default function useSupabaseSync(user, program, setProgram, sessions, setSessions, settings, setSettings) {
   const [syncStatus, setSyncStatus] = useState('idle')
   const hasSynced = useRef(false)
@@ -51,7 +70,9 @@ export default function useSupabaseSync(user, program, setProgram, sessions, set
         if (error) throw error
 
         if (data.program && Object.keys(data.program).length > 0) setProgram(migrateProgram(data.program))
-        if (data.sessions && Array.isArray(data.sessions)) setSessions(data.sessions)
+        if (data.sessions && Array.isArray(data.sessions)) {
+          setSessions(local => mergeSessions(local, data.sessions))
+        }
         if (data.settings && Object.keys(data.settings).length > 0) setSettings(data.settings)
 
         hasSynced.current = true

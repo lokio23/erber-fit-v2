@@ -30,7 +30,7 @@ export function calcExerciseVolume(exercise) {
 }
 
 export function countCompletedSets(session) {
-  return session.exercises.reduce((total, ex) => {
+  return (session.exercises || []).reduce((total, ex) => {
     return total + ex.sets.filter(s => s.completed).length
   }, 0)
 }
@@ -39,14 +39,21 @@ export function countTotalSets(exercises) {
   return exercises.reduce((total, ex) => total + ex.sets, 0)
 }
 
+// Best set by estimated 1RM, not raw weight: 185x6 (e1RM 222) is a better lift
+// than 190x1 (e1RM 196), and e1RM is what the Progress tab reports.
 export function findPR(sessions, exerciseId) {
   let best = null
+  let bestScore = -1
   for (const session of sessions) {
-    const ex = session.exercises.find(e => e.exerciseId === exerciseId)
+    const ex = (session.exercises || []).find(e => e.exerciseId === exerciseId)
     if (!ex) continue
     for (const set of ex.sets) {
       if (!set.completed) continue
-      if (!best || set.weight > best.weight || (set.weight === best.weight && set.reps > best.reps)) {
+      const score = calcEstimated1RM(set.weight, set.reps)
+      // Bodyweight sets score 0, so fall back to reps to keep them comparable.
+      const tie = score === bestScore && set.reps > (best?.reps ?? 0)
+      if (score > bestScore || tie) {
+        bestScore = score
         best = { weight: set.weight, reps: set.reps, rpe: set.rpe || null, date: session.date }
       }
     }
@@ -102,6 +109,42 @@ export function getWeeksSinceDate(dateStr) {
   return Math.floor(diff / MS_PER_WEEK)
 }
 
+// Scheduled deloads have no measured hypertrophy benefit — both trials that tested
+// them found neutral results, and full cessation cost strength (Coleman et al. 2024,
+// PeerJ; Pancar et al. 2026, Sci Rep). So suggest one when training actually stops
+// producing better sets, rather than on a calendar interval.
+//
+// "Stalled" = across the last `window` sessions that had logged sets, fewer than a
+// quarter of the exercises you also trained in the previous `window` sessions improved
+// their best estimated 1RM.
+export function isProgressStalled(sessions, window = 3) {
+  const trained = sessions.filter(s => countCompletedSets(s) > 0)
+  if (trained.length < window * 2) return false
+
+  const bestPerExercise = (group) => {
+    const best = {}
+    for (const session of group) {
+      for (const ex of session.exercises || []) {
+        for (const set of ex.sets) {
+          if (!set.completed) continue
+          const e1rm = calcEstimated1RM(set.weight, set.reps)
+          if (e1rm > (best[ex.exerciseId] || 0)) best[ex.exerciseId] = e1rm
+        }
+      }
+    }
+    return best
+  }
+
+  const recent = bestPerExercise(trained.slice(-window))
+  const prior = bestPerExercise(trained.slice(-window * 2, -window))
+  const shared = Object.keys(recent).filter(id => prior[id] > 0)
+  // Too little overlap to judge — different workouts, not a stall.
+  if (shared.length < 3) return false
+
+  const improved = shared.filter(id => recent[id] > prior[id]).length
+  return improved / shared.length < 0.25
+}
+
 export function isDeloadActive(settings) {
   if (!settings.deloadActiveUntil) return false
   return new Date(settings.deloadActiveUntil) >= new Date(getTodayStr())
@@ -143,9 +186,9 @@ export function calcEstimated1RM(weight, reps) {
 
 export function getWeekStart(dateStr, weeksAgo = 0) {
   const d = new Date(dateStr + 'T12:00:00')
-  // Week starts on Friday (day 5). Fri=0, Sat=1, Sun=2, Mon=3, Tue=4, Wed=5, Thu=6
-  const daysSinceFriday = (d.getDay() + 2) % 7
-  d.setDate(d.getDate() - daysSinceFriday - weeksAgo * 7)
+  // Week starts on Monday (day 1). Mon=0, Tue=1, Wed=2, Thu=3, Fri=4, Sat=5, Sun=6
+  const daysSinceMonday = (d.getDay() + 6) % 7
+  d.setDate(d.getDate() - daysSinceMonday - weeksAgo * 7)
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
@@ -185,17 +228,23 @@ export function calcWeeklyTotalSets(sessions, weeksAgo = 0) {
   return weekSessions.reduce((total, s) => total + countCompletedSets(s), 0)
 }
 
+// A session counts as trained if any set was logged. Keying off completedAt
+// undercounted badly — only 8 of the first 25 sessions ever had it set, because
+// COMPLETE WORKOUT rarely gets tapped on the way out of the gym.
+export function isTrained(session) {
+  return countCompletedSets(session) > 0
+}
+
 export function calcWorkoutsThisWeek(sessions) {
-  return getSessionsInWeek(sessions, 0).filter(s => s.completedAt).length
+  return getSessionsInWeek(sessions, 0).filter(isTrained).length
 }
 
 export function calcStreak(sessions) {
   if (sessions.length === 0) return 0
   let streak = 0
   for (let w = 0; w < MAX_STREAK_WEEKS; w++) {
-    const weekSessions = getSessionsInWeek(sessions, w)
-    const completed = weekSessions.filter(s => s.completedAt).length
-    if (completed >= STREAK_MIN_WORKOUTS) streak++
+    const trained = getSessionsInWeek(sessions, w).filter(isTrained).length
+    if (trained >= STREAK_MIN_WORKOUTS) streak++
     else break
   }
   return streak

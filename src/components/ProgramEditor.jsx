@@ -46,8 +46,39 @@ export default function ProgramEditor({ dayKey, onClose }) {
     setConfirmAction({ type: 'reset' })
   }
 
+  // Deletions are remembered per day so migrateProgram doesn't add the exercise back
+  // the next time the default program changes.
+  const removeExerciseAt = (index) => {
+    setProgram(prev => {
+      const day = prev[dayKey]
+      const removed = day.exercises[index]
+      const tombstones = day.removedIds || []
+      return {
+        ...prev,
+        [dayKey]: {
+          ...day,
+          exercises: day.exercises.filter((_, i) => i !== index),
+          removedIds: removed && !tombstones.includes(removed.id)
+            ? [...tombstones, removed.id]
+            : tombstones,
+        },
+      }
+    })
+  }
+
   const addExercise = (exercise) => {
-    updateExercises([...workout.exercises, exercise])
+    setProgram(prev => {
+      const day = prev[dayKey]
+      return {
+        ...prev,
+        [dayKey]: {
+          ...day,
+          exercises: [...day.exercises, exercise],
+          // Adding it back clears the tombstone.
+          removedIds: (day.removedIds || []).filter(id => id !== exercise.id),
+        },
+      }
+    })
     setAddingExercise(false)
   }
 
@@ -234,7 +265,7 @@ export default function ProgramEditor({ dayKey, onClose }) {
           confirmLabel="Remove"
           danger
           onConfirm={() => {
-            updateExercises(workout.exercises.filter((_, i) => i !== confirmAction.index))
+            removeExerciseAt(confirmAction.index)
             setConfirmAction(null)
           }}
           onCancel={() => setConfirmAction(null)}
@@ -248,9 +279,10 @@ export default function ProgramEditor({ dayKey, onClose }) {
           confirmLabel="Reset"
           danger
           onConfirm={() => {
+            // Reset clears tombstones too — the day goes back to pristine defaults.
             setProgram(prev => ({
               ...prev,
-              [dayKey]: DEFAULT_PROGRAM[dayKey],
+              [dayKey]: { ...DEFAULT_PROGRAM[dayKey], removedIds: [] },
             }))
             setConfirmAction(null)
           }}
@@ -341,8 +373,11 @@ function AddExercisePanel({ onAdd, onCancel, existingIds, dayKey, isWarmup }) {
       return EXERCISE_LIBRARY.filter(ex => ex.isWarmup)
     }
     const dayMuscles = program[dayKey]?.muscleGroups || []
+    // Core work is offered on every day. It used to be tagged with all ten
+    // muscle groups to achieve that, which made it count toward all ten in the
+    // volume math; the isCore flag keeps it visible without that side effect.
     return EXERCISE_LIBRARY.filter(ex =>
-      !ex.isWarmup && ex.muscleGroups.some(g => dayMuscles.includes(g))
+      !ex.isWarmup && (ex.isCore || ex.muscleGroups.some(g => dayMuscles.includes(g)))
     )
   }, [dayKey, program, isWarmup])
 
