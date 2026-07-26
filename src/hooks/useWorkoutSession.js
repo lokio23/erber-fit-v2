@@ -18,21 +18,10 @@ function withAutoCompletion(session) {
   return { ...session, completedAt: new Date().toISOString() }
 }
 
-function getInitialProgram() {
-  try {
-    const raw = localStorage.getItem('erberfit_program')
-    if (!raw) return DEFAULT_PROGRAM
-    const stored = JSON.parse(raw)
-    const migrated = migrateProgram(stored)
-    localStorage.setItem('erberfit_program', JSON.stringify(migrated))
-    return migrated
-  } catch {
-    return DEFAULT_PROGRAM
-  }
-}
-
 export default function useWorkoutSession() {
-  const [program, setProgram] = useLocalStorage('erberfit_program', getInitialProgram())
+  // migrateProgram runs once on the stored value rather than on every render, which is
+  // what the old getInitialProgram() argument did.
+  const [program, setProgram] = useLocalStorage('erberfit_program', DEFAULT_PROGRAM, migrateProgram)
   const [sessions, setSessions] = useLocalStorage('erberfit_sessions', [])
   const [settings, setSettings] = useLocalStorage('erberfit_settings', {
     unit: 'lbs',
