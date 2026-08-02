@@ -20,6 +20,14 @@ const LEGS_WARMUPS = [
   { id: 'wu_walking_lunge', name: 'Walking Lunge (bodyweight)', sets: 2, repsMin: 10, repsMax: 10, restSeconds: 30, isBuiltIn: true, isCompound: true, isWarmup: true },
 ]
 
+// Sessions written before the name lookup existed stored the raw id as the name
+// (e.g. "farmer_carry"), so resolve through the library when displaying.
+export function exerciseDisplayName(exerciseId, storedName) {
+  if (storedName && storedName !== exerciseId) return storedName
+  const found = EXERCISE_LIBRARY.find(e => e.id === exerciseId)
+  return found ? found.name : (storedName || exerciseId)
+}
+
 export const DEFAULT_PROGRAM = {
   monday: {
     name: 'PUSH B',

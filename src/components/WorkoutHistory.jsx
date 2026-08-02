@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { ChevronDown, ChevronLeft, ChevronRight, Calendar, List } from 'lucide-react'
 import { useWorkout } from '../WorkoutContext'
 import { calcSessionVolume, formatDate, displayWeight } from '../utils/calculations'
+import { exerciseDisplayName } from '../data/workouts'
 
 export default function WorkoutHistory() {
   const { sessions, settings } = useWorkout()
@@ -120,7 +121,9 @@ function SessionRow({ session, expanded, onToggle, unit }) {
         <div className="px-4 pb-4 border-t border-border pt-3 space-y-3">
           {session.exercises.map(ex => (
             <div key={ex.exerciseId}>
-              <p className="text-xs font-body font-medium text-text mb-1">{ex.name}</p>
+              <p className="text-xs font-body font-medium text-text mb-1">
+                {exerciseDisplayName(ex.exerciseId, ex.name)}
+              </p>
               <div className="space-y-0.5">
                 {ex.sets.map((set, i) => (
                   <p key={i} className="text-[11px] font-mono text-muted pl-2">
@@ -136,9 +139,9 @@ function SessionRow({ session, expanded, onToggle, unit }) {
               )}
             </div>
           ))}
-          {session.startedAt && session.completedAt && (
+          {trainingSpan(session) !== null && (
             <p className="text-[10px] font-mono text-muted/50 pt-2 border-t border-border">
-              Duration: {formatDuration(session.startedAt, session.completedAt)}
+              Duration: {formatDuration(trainingSpan(session))}
             </p>
           )}
         </div>
@@ -239,11 +242,22 @@ function CalendarView({ sessions, month, onMonthChange, onSelectDate }) {
   )
 }
 
-function formatDuration(start, end) {
-  const ms = new Date(end) - new Date(start)
-  const mins = Math.floor(ms / 60000)
+// Time actually spent training: start of the session through the LAST logged set.
+// Using completedAt instead made a session read 7h 14m because the Complete button
+// was tapped hours after the last set.
+function trainingSpan(session) {
+  const stamps = [...(session.exercises || []), ...(session.warmupExercises || [])]
+    .flatMap(ex => (ex.sets || []).map(s => s.timestamp))
+    .filter(Boolean)
+    .sort()
+  const start = session.startedAt || stamps[0]
+  const end = stamps.length ? stamps[stamps.length - 1] : session.completedAt
+  if (!start || !end) return null
+  const mins = Math.floor((new Date(end) - new Date(start)) / 60000)
+  return mins >= 0 ? mins : null
+}
+
+function formatDuration(mins) {
   if (mins < 60) return `${mins}m`
-  const hrs = Math.floor(mins / 60)
-  const remainMins = mins % 60
-  return `${hrs}h ${remainMins}m`
+  return `${Math.floor(mins / 60)}h ${mins % 60}m`
 }
