@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import useLocalStorage from './useLocalStorage'
-import { DEFAULT_PROGRAM } from '../data/workouts'
+import { DEFAULT_PROGRAM, exerciseDisplayName } from '../data/workouts'
 import { getTodayStr } from '../utils/calculations'
 import { migrateProgram } from '../utils/migrateProgram'
 
@@ -121,7 +121,7 @@ export default function useWorkoutSession() {
         ...session,
         [key]: [...exercises, {
           exerciseId,
-          name: exerciseId,
+          name: exerciseDisplayName(exerciseId),
           targetSets: stamped.length,
           targetRepsMin: 0,
           targetRepsMax: 0,
