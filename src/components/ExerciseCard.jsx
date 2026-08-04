@@ -1,7 +1,9 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
-import { Minus, Plus, Check, RotateCcw } from 'lucide-react'
+import { Minus, Plus, Check, RotateCcw, ArrowLeftRight } from 'lucide-react'
 import SetLogger from './SetLogger'
 import FormGuide from './FormGuide'
+import SwapSheet from './SwapSheet'
+import { getSwapOptions } from '../utils/substitution'
 import { getLoadNote } from '../data/loadConventions'
 import { useWorkout } from '../WorkoutContext'
 import { formatRepRange, formatRestTime, findPR, getLastSessionSets, getProgressionRecommendation, calcEstimated1RM } from '../utils/calculations'
@@ -170,6 +172,14 @@ export default function ExerciseCard({ exercise, sessionExercise, sessionId, onS
 
   const showWarmupTick = isWarmup && !readOnly && sessionId
 
+  // Swapping is offered before any set is logged — after that, the logged sets
+  // belong to this exercise and changing its identity would misattribute them.
+  const [swapOpen, setSwapOpen] = useState(false)
+  const swappable = useMemo(() => {
+    if (readOnly || isWarmup || !sessionId || completedSets.length > 0) return false
+    return getSwapOptions(exercise.id, []) !== null
+  }, [readOnly, isWarmup, sessionId, completedSets.length, exercise.id])
+
   return (
     <div className={`relative rounded-xl border transition-colors ${
       justCompleted ? 'animate-electric-glow' : ''
@@ -200,11 +210,22 @@ export default function ExerciseCard({ exercise, sessionExercise, sessionId, onS
               {isWarmup ? '' : ` · ${formatRestTime(exercise.restSeconds)} rest`}
             </p>
           </div>
-          {!readOnly && !isWarmup && (
-            <div className="text-[10px] font-mono text-accent/60 bg-accent/5 px-2 py-0.5 rounded-full">
-              {completedSets.length}/{targetSets}
-            </div>
-          )}
+          <div className="flex items-center gap-1.5">
+            {swappable && (
+              <button
+                onClick={() => setSwapOpen(true)}
+                className="p-1.5 -m-1 text-muted/50 hover:text-accent transition-colors"
+                aria-label={`Swap ${exercise.name}`}
+              >
+                <ArrowLeftRight size={13} />
+              </button>
+            )}
+            {!readOnly && !isWarmup && (
+              <div className="text-[10px] font-mono text-accent/60 bg-accent/5 px-2 py-0.5 rounded-full">
+                {completedSets.length}/{targetSets}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Tags */}
@@ -348,6 +369,10 @@ export default function ExerciseCard({ exercise, sessionExercise, sessionId, onS
         <div className="px-4 pb-4">
           <FormGuide exerciseId={exercise.id} />
         </div>
+      )}
+
+      {swapOpen && (
+        <SwapSheet exercise={exercise} sessionId={sessionId} onClose={() => setSwapOpen(false)} />
       )}
     </div>
   )

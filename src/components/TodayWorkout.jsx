@@ -4,6 +4,7 @@ import ExerciseCard from './ExerciseCard'
 import ProgramEditor from './ProgramEditor'
 import ConfirmDialog from './ConfirmDialog'
 import { useWorkout } from '../WorkoutContext'
+import { EXERCISE_LIBRARY } from '../data/workouts'
 import { countCompletedSets, countTotalSets, getWeeksSinceDate, isDeloadActive, getDeloadSets, getTodayStr, formatDate, displayWeight, getLastSessionForDay, isProgressStalled } from '../utils/calculations'
 
 const DAYS = [
@@ -84,6 +85,29 @@ export default function TodayWorkout({ onStartTimer }) {
 
   const session = getTodaysSession(selectedWorkoutKey)
 
+  // During an active session the snapshot is the truth — swaps live there.
+  // Program exercises added mid-session are appended; logging a set adopts
+  // them into the session via logSets' not-found branch.
+  const activeExerciseList = useMemo(() => {
+    if (!session) return []
+    const fromSession = session.exercises.map(ex => ({
+      id: ex.exerciseId,
+      name: ex.name,
+      sets: deloadActive ? getDeloadSets(ex.targetSets) : ex.targetSets,
+      repsMin: ex.targetRepsMin,
+      repsMax: ex.targetRepsMax,
+      restSeconds: ex.restSeconds,
+      isCompound: ex.isCompound,
+      isBuiltIn: EXERCISE_LIBRARY.some(e => e.id === ex.exerciseId),
+      sessionEx: ex,
+    }))
+    const swappedOut = new Set(session.exercises.map(ex => ex.swappedFrom).filter(Boolean))
+    const extras = effectiveExercises
+      .filter(ex => !session.exercises.some(se => se.exerciseId === ex.id) && !swappedOut.has(ex.id))
+      .map(ex => ({ ...ex, sessionEx: undefined }))
+    return [...fromSession, ...extras]
+  }, [session, effectiveExercises, deloadActive])
+
   const pastSession = useMemo(() => {
     if (isToday) return null
     return getLastSessionForDay(sessions, selectedDay)
@@ -99,8 +123,8 @@ export default function TodayWorkout({ onStartTimer }) {
   }, [settings, sessions, isToday, deloadActive])
 
   const totalSets = useMemo(
-    () => countTotalSets(effectiveExercises),
-    [effectiveExercises]
+    () => countTotalSets(session ? activeExerciseList : effectiveExercises),
+    [session, activeExerciseList, effectiveExercises]
   )
 
   const completedSets = useMemo(
@@ -388,19 +412,16 @@ export default function TodayWorkout({ onStartTimer }) {
           {/* Exercise cards */}
           {isToday && session ? (
             <div className="px-4 space-y-3">
-              {effectiveExercises.map(exercise => {
-                const sessionEx = session.exercises.find(e => e.exerciseId === exercise.id)
-                return (
-                  <ExerciseCard
-                    key={exercise.id}
-                    exercise={exercise}
-                    sessionExercise={sessionEx}
-                    sessionId={session.id}
-                    onSetLogged={handleSetLogged}
-                    readOnly={!!session.completedAt && !session.resumed}
-                  />
-                )
-              })}
+              {activeExerciseList.map(exercise => (
+                <ExerciseCard
+                  key={exercise.id}
+                  exercise={exercise}
+                  sessionExercise={exercise.sessionEx}
+                  sessionId={session.id}
+                  onSetLogged={handleSetLogged}
+                  readOnly={!!session.completedAt && !session.resumed}
+                />
+              ))}
             </div>
           ) : pastSession ? (
             <div className="px-4 space-y-3">
