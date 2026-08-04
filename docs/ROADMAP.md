@@ -108,10 +108,14 @@ rectus femoris work added in Stage 1.5.
 
 Separate session. Depends on the library schema change, which touches every exercise definition.
 
-- [ ] Retag `EXERCISE_LIBRARY` with `pattern`, `equipment`, `primary[]`, `secondary[]`,
-      replacing the all-ten-muscle-groups hack.
-- [ ] **Swap button** on each exercise card: 5–6 same-pattern alternatives, each showing the
-      weight you last used for it. Choose "today only" or "permanent."
+- [x] Retag `EXERCISE_LIBRARY` with `pattern`, `equipment`, `primary[]`, `secondary[]`,
+      plus `lengthPosition`, `technicalDemand`, and `locked` — volume math now weights
+      primary 1.0 / secondary 0.5.
+- [x] **Swap button** on each exercise card (`SwapSheet` + `src/utils/substitution.js`):
+      equivalent vs shifts-emphasis sections, last-used weight per option, known downgrades
+      excluded outright, locked compounds explain themselves. Today-only swaps live on the
+      session (which the active workout now renders from); permanent swaps rewrite the
+      program day with tombstones.
 - [ ] **Exercise library screen** — searchable and filterable, with form guide, your history,
       and your PR per exercise. Today those ~110 exercises are only reachable inside the program
       editor's add panel, filtered to the day's muscle groups (which is also why the ABS picker

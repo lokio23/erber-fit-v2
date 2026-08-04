@@ -186,6 +186,53 @@ export default function useWorkoutSession() {
     }))
   }, [setSessions])
 
+  // Swap an unlogged exercise for a library alternative. The session entry keeps
+  // the slot's set and rep targets — the swap changes the movement, not the volume
+  // allocation. With permanent, the program day is rewritten too, with tombstones
+  // maintained so a future migration doesn't resurrect the swapped-out default.
+  const swapExercise = useCallback((sessionId, oldExerciseId, libExercise, { permanent = false } = {}) => {
+    // Read the day here — the setSessions updater runs after this handler returns.
+    const workoutKey = sessions.find(s => s.id === sessionId)?.workoutKey ?? null
+    setSessions(prev => prev.map(session => {
+      if (session.id !== sessionId) return session
+      return {
+        ...session,
+        exercises: session.exercises.map(ex => {
+          if (ex.exerciseId !== oldExerciseId || ex.sets.length > 0) return ex
+          return {
+            ...ex,
+            exerciseId: libExercise.id,
+            name: libExercise.name,
+            isCompound: !!libExercise.isCompound,
+            swappedFrom: oldExerciseId,
+          }
+        }),
+      }
+    }))
+    if (!permanent || !workoutKey) return
+    setProgram(prev => {
+      const day = prev[workoutKey]
+      if (!day) return prev
+      const tombstones = day.removedIds || []
+      const wasDefault = (DEFAULT_PROGRAM[workoutKey]?.exercises || []).some(e => e.id === oldExerciseId)
+      return {
+        ...prev,
+        [workoutKey]: {
+          ...day,
+          exercises: day.exercises.map(ex => (
+            ex.id === oldExerciseId
+              ? { ...ex, id: libExercise.id, name: libExercise.name, isBuiltIn: true, isCompound: !!libExercise.isCompound }
+              : ex
+          )),
+          removedIds: [
+            ...tombstones.filter(id => id !== libExercise.id),
+            ...(wasDefault && !tombstones.includes(oldExerciseId) ? [oldExerciseId] : []),
+          ],
+        },
+      }
+    })
+  }, [sessions, setSessions, setProgram])
+
   const completeSession = useCallback((sessionId) => {
     setSessions(prev => prev.map(session => {
       if (session.id !== sessionId) return session
@@ -237,6 +284,7 @@ export default function useWorkoutSession() {
     logSet,
     logSets,
     clearSets,
+    swapExercise,
     updateExerciseNotes,
     completeSession,
     resumeSession,
