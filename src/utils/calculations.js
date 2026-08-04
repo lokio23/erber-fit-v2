@@ -199,23 +199,28 @@ export function getSessionsInWeek(sessions, weeksAgo = 0) {
   return sessions.filter(s => s.date >= weekStart && s.date < nextWeekStart)
 }
 
+// Primary muscles count a set at 1.0 and secondary at 0.5 — the fractional
+// counting that fit the data best in Pelland et al. Untagged exercises
+// (customs, pre-tagging library) fall back to muscleGroups at full weight.
 export function calcSetsPerMuscleGroup(sessions, exerciseLibrary, weeksAgo = 0) {
   const weekSessions = getSessionsInWeek(sessions, weeksAgo)
   const muscleMap = {}
 
-  // Build exercise → muscleGroups lookup from library
-  const exerciseMuscles = {}
+  const byId = {}
   for (const ex of exerciseLibrary) {
-    exerciseMuscles[ex.id] = ex.muscleGroups || []
+    byId[ex.id] = ex
   }
 
   for (const session of weekSessions) {
     for (const ex of session.exercises) {
       const completedSets = ex.sets.filter(s => s.completed).length
       if (completedSets === 0) continue
-      const muscles = exerciseMuscles[ex.exerciseId] || []
-      for (const muscle of muscles) {
-        muscleMap[muscle] = (muscleMap[muscle] || 0) + completedSets
+      const entry = byId[ex.exerciseId]
+      const weighted = entry?.primary
+        ? [...entry.primary.map(m => [m, 1]), ...(entry.secondary || []).map(m => [m, 0.5])]
+        : (entry?.muscleGroups || []).map(m => [m, 1])
+      for (const [muscle, weight] of weighted) {
+        muscleMap[muscle] = (muscleMap[muscle] || 0) + completedSets * weight
       }
     }
   }
