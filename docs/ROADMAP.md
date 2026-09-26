@@ -156,3 +156,17 @@ Ordered by value, not urgency.
       cache name `erberfit-v1` is never bumped; fonts have no offline fallback.
 - [ ] PIN auth derives the password deterministically from the PIN, so 4-digit PINs are enumerable.
 - [ ] No tests. `src/utils/calculations.js` is pure functions and the obvious place to start.
+
+---
+
+## Operations
+
+- **Supabase free tier pauses after ~1 week idle.** Resuming takes a few minutes;
+  `auth/v1/health` returns 502 while starting and 200 once up. Sync shows an error
+  state until then, and local data is never overwritten.
+- **Schema lives in [`supabase/schema.sql`](../supabase/schema.sql).** It is idempotent —
+  run it in the Supabase SQL editor to recreate `user_data` and its RLS policies.
+  On 2026-09-26 the table was found missing after a long pause and there was no
+  schema in version control to restore from; that gap is now closed.
+- **The app is local-first.** localStorage is the working copy; Supabase is backup.
+  Export Data in Settings is the fastest way to take a snapshot off the device.
