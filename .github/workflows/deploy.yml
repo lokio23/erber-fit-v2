@@ -3,6 +3,11 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+  # Lets a deploy be re-run by hand. On 2026-11-11 a GitHub incident left a
+  # queued run orphaned — no job ever assigned, `updated_at` frozen at
+  # creation, and cancel refused it — and with only a push trigger the sole
+  # way to redeploy the same code was an empty commit.
+  workflow_dispatch:
 
 permissions:
   contents: read
