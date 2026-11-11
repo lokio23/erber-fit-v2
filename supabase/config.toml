@@ -1,0 +1,19 @@
+# Remote auth config for the Erber Fit project, pushed with `supabase config push`.
+#
+# The app signs in with a PIN, which it maps to a synthetic address
+# `<pin>@erberfit.app` (see src/hooks/useAuth.js). Nobody can ever receive mail
+# at that domain, so email confirmation MUST stay off — with it on, every PIN
+# sign-up returns a user with no session and the login silently does nothing.
+#
+# This file exists because the project is administered through the CLI rather
+# than the dashboard.
+
+project_id = "srfnbnrhybxomwmpwkvb"
+
+[auth]
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+enable_confirmations = false
+secure_password_change = false
