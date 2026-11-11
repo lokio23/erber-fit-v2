@@ -1,28 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { migrateProgram } from '../utils/migrateProgram'
+import { mergeSessions } from '../utils/mergeSessions'
 
 const DEBOUNCE_MS = 2000
 const MAX_SYNC_INTERVAL_MS = 10000
-
-const loggedSetCount = (session) =>
-  [...(session.exercises || []), ...(session.warmupExercises || [])]
-    .reduce((t, ex) => t + (ex.sets || []).filter(s => s.completed).length, 0)
-
-// Union local and remote sessions by id rather than letting remote win outright.
-// A straight overwrite silently discarded anything logged on this device while
-// signed out; where both sides have the same session, keep the fuller one.
-function mergeSessions(localSessions, remoteSessions) {
-  const byId = new Map()
-  for (const session of remoteSessions || []) byId.set(session.id, session)
-  for (const session of localSessions || []) {
-    const remote = byId.get(session.id)
-    if (!remote || loggedSetCount(session) > loggedSetCount(remote)) {
-      byId.set(session.id, session)
-    }
-  }
-  return [...byId.values()].sort((a, b) => a.date.localeCompare(b.date))
-}
 
 export default function useSupabaseSync(user, program, setProgram, sessions, setSessions, settings, setSettings) {
   const [syncStatus, setSyncStatus] = useState('idle')

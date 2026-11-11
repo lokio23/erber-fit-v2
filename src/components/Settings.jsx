@@ -4,6 +4,7 @@ import { useWorkout } from '../WorkoutContext'
 import { supabase } from '../lib/supabase'
 import { isDeloadActive, isProgressStalled, getTodayStr, formatDate } from '../utils/calculations'
 import { DEFAULT_PROGRAM } from '../data/workouts'
+import { mergeSessions } from '../utils/mergeSessions'
 import ConfirmDialog from './ConfirmDialog'
 
 export default function Settings() {
@@ -47,8 +48,20 @@ export default function Settings() {
           return
         }
         if (hasProgram) setProgram(data.erberfit_program)
-        if (hasSessions) setSessions(data.erberfit_sessions)
         if (hasSettings) setSettings(data.erberfit_settings)
+        if (hasSessions) {
+          // Union with what is already here rather than replacing it. Importing
+          // an older backup used to wipe every session logged since that file
+          // was written — the opposite of what a restore is for.
+          const localIds = new Set((sessions || []).map(s => s.id))
+          const added = data.erberfit_sessions.filter(s => !localIds.has(s.id)).length
+          setSessions(local => mergeSessions(local, data.erberfit_sessions))
+          alert(
+            added > 0
+              ? `Imported ${added} workout${added === 1 ? '' : 's'} from the backup. Sessions already on this device were kept.`
+              : 'Backup read — every workout in it was already on this device. Nothing was removed.'
+          )
+        }
       } catch {
         alert('Invalid backup file — could not parse JSON.')
       }

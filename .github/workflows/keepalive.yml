@@ -1,0 +1,45 @@
+name: Keep Supabase awake
+
+# WHY THIS EXISTS
+# Supabase free-tier projects pause after about a week with no API traffic.
+# When a project pauses its hostname stops resolving (NXDOMAIN), so the app's
+# PIN login fails outright with no useful error. That happened twice: the
+# `user_data` table vanished around 2026-09-26, and the whole project was found
+# paused on 2026-11-11 after ~6 weeks idle, which is why sign-in was broken.
+#
+# A real query every few days counts as activity and keeps the project awake.
+# Note: GitHub disables scheduled workflows after 60 days with no repo commits,
+# and emails the owner first. If sign-in breaks again, check this workflow is
+# still enabled before assuming the project itself is at fault.
+
+on:
+  schedule:
+    - cron: '17 9 */3 * *'   # every 3 days, 09:17 UTC
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Query the database through PostgREST
+        env:
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          set -euo pipefail
+
+          # RLS means an anonymous select returns an empty array, not rows — the
+          # point is that the query reaches Postgres at all.
+          code=$(curl -sS -o /tmp/body -w '%{http_code}' --max-time 30 \
+            "$SUPABASE_URL/rest/v1/user_data?select=user_id&limit=1" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY")
+
+          echo "HTTP $code"
+          cat /tmp/body
+          echo
+
+          if [ "$code" != "200" ]; then
+            echo "::error::Supabase did not answer with 200 — the project may be paused, or public.user_data may be missing (see supabase/schema.sql)."
+            exit 1
+          fi
