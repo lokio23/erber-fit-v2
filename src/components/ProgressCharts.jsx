@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts'
 import { TrendingUp, TrendingDown, Minus, Trophy, Flame, Dumbbell, Target } from 'lucide-react'
 import { useWorkout } from '../WorkoutContext'
+import NextWeights from './NextWeights'
 import { EXERCISE_LIBRARY } from '../data/workouts'
 import {
   findPR, displayWeight, formatDate, calcEstimated1RM,
@@ -63,6 +64,7 @@ export default function ProgressCharts() {
 
       <div className="px-4 space-y-4">
         <WeeklySummary sessions={sessions} />
+        <NextWeights />
         <MuscleGroupVolume sessions={sessions} />
         <MuscleGroupTracker sessions={sessions} />
         <StrengthTrends sessions={sessions} unit={settings.unit} />

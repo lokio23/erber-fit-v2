@@ -244,6 +244,20 @@ export function goalsForWeight(exercise, rec, weight, { step = DEFAULT_STEP, bod
   return fill(sets, clamp(predicted, 1, ceiling))
 }
 
+// How close a lift is to its next weight, for the overview list. Counts each set up
+// to the unlock number; a set not yet done at this weight counts as nothing.
+export function unlockProgress(rec) {
+  if (!rec || rec.status !== 'build' || rec.unlock == null) return null
+  const slots = Math.max(rec.neededSets, rec.last.reps.length)
+  const banked = rec.last.reps.reduce((total, r) => total + Math.min(r, rec.unlock), 0)
+  const target = rec.unlock * slots
+  return {
+    repsToGo: target - banked,
+    setsToGo: Math.max(0, rec.neededSets - rec.last.reps.length),
+    fraction: target > 0 ? banked / target : 0,
+  }
+}
+
 const fmt = n => String(Math.round(n * 10) / 10)
 
 // Two short lines for the exercise card.

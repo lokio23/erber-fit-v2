@@ -3,6 +3,7 @@ import { Coffee, Pencil, AlertTriangle, CheckCircle2, XCircle, Trophy, Zap } fro
 import ExerciseCard from './ExerciseCard'
 import ProgramEditor from './ProgramEditor'
 import ConfirmDialog from './ConfirmDialog'
+import NextWeights from './NextWeights'
 import { useWorkout } from '../WorkoutContext'
 import { EXERCISE_LIBRARY } from '../data/workouts'
 import { countCompletedSets, countTotalSets, getWeeksSinceDate, isDeloadActive, getDeloadSets, getTodayStr, formatDate, displayWeight, getLastSessionForDay, isProgressStalled } from '../utils/calculations'
@@ -148,6 +149,9 @@ export default function TodayWorkout({ onStartTimer }) {
     if (program.abs) ppls.push({ key: 'abs', name: 'ABS' })
     return ppls
   }, [program])
+
+  // Stable array so the plan list does not recompute on every render.
+  const planKeys = useMemo(() => (selectedWorkoutKey ? [selectedWorkoutKey] : []), [selectedWorkoutKey])
 
   const handleStartWorkout = useCallback(() => {
     startSession(selectedWorkoutKey)
@@ -344,6 +348,12 @@ export default function TodayWorkout({ onStartTimer }) {
                 >
                   START WORKOUT
                 </button>
+                {/* What to push in the workout that is about to start */}
+                {selectedWorkoutKey && selectedWorkoutKey !== 'abs' && (
+                  <div className="mt-4">
+                    <NextWeights workoutKeys={planKeys} compact />
+                  </div>
+                )}
               </>
             )}
           </div>
