@@ -6,7 +6,8 @@ import SwapSheet from './SwapSheet'
 import { getSwapOptions } from '../utils/substitution'
 import { getLoadNote } from '../data/loadConventions'
 import { useWorkout } from '../WorkoutContext'
-import { formatRepRange, formatRestTime, findPR, getLastSessionSets, getProgressionRecommendation, calcEstimated1RM } from '../utils/calculations'
+import { formatRepRange, formatRestTime, findPR, getLastSessionSets, calcEstimated1RM, getTodayStr } from '../utils/calculations'
+import { DEFAULT_STEP, STEP_OPTIONS, recommend, exerciseHistory, goalsForWeight, describe, effortTarget } from '../utils/progression'
 
 let stylesInjected = false
 function injectAnimationStyles() {
@@ -48,8 +49,21 @@ injectAnimationStyles()
 
 const fmtWeight = (n) => String(Math.round(n * 10) / 10)
 
+// Stored on the session exercise as `effort`.
+const EFFORT_OPTIONS = [
+  { value: 0, label: '0' },
+  { value: 1, label: '1-2' },
+  { value: 3, label: '3+' },
+]
+
+const TONE_CLASSES = {
+  accent: { box: 'bg-accent/10 border-accent/20', text: 'text-accent' },
+  warn: { box: 'bg-accent-secondary/5 border-accent-secondary/20', text: 'text-accent-secondary/90' },
+  muted: { box: 'bg-bg border-border/60', text: 'text-muted' },
+}
+
 export default function ExerciseCard({ exercise, sessionExercise, sessionId, onSetLogged, readOnly, isWarmup }) {
-  const { sessions, settings, logSet, logSets, clearSets, removeSet } = useWorkout()
+  const { sessions, settings, setSettings, logSet, logSets, clearSets, removeSet, setExerciseEffort } = useWorkout()
 
   const pastSessions = useMemo(
     () => (sessionId ? sessions.filter(s => s.id !== sessionId) : sessions),
@@ -68,23 +82,33 @@ export default function ExerciseCard({ exercise, sessionExercise, sessionId, onS
     [pastSessions, exercise.id, readOnly, isWarmup]
   )
 
-  const progression = useMemo(() => {
+  // Most plates, pins and dumbbells move in 5s; some stacks only move in 10s. The
+  // choice is remembered per exercise.
+  const step = settings.weightSteps?.[exercise.id] ?? DEFAULT_STEP
+  const setStep = (value) => {
+    setSettings(prev => ({ ...prev, weightSteps: { ...(prev.weightSteps || {}), [exercise.id]: value } }))
+  }
+
+  // Today's weight and rep goals, from the last session this exercise was logged.
+  const rec = useMemo(() => {
     if (readOnly || isWarmup) return null
-    return getProgressionRecommendation(
-      pastSessions, exercise.id, exercise.name,
-      exercise.repsMax, exercise.isCompound, settings.unit,
+    return recommend(
+      { id: exercise.id, name: exercise.name, sets: exercise.sets, repsMin: exercise.repsMin, repsMax: exercise.repsMax, isCompound: exercise.isCompound },
+      exerciseHistory(pastSessions, exercise.id, exercise.name),
+      { step, bodyweight: settings.bodyweight, today: getTodayStr() },
     )
-  }, [pastSessions, exercise.id, exercise.name, exercise.repsMax, exercise.isCompound,
-      settings.unit, readOnly, isWarmup])
+  }, [pastSessions, exercise.id, exercise.name, exercise.sets, exercise.repsMin, exercise.repsMax,
+      exercise.isCompound, step, settings.bodyweight, readOnly, isWarmup])
+
+  const advice = useMemo(() => describe(rec, settings.unit), [rec, settings.unit])
+  const effort = useMemo(() => (isWarmup ? null : effortTarget(exercise)), [exercise, isWarmup])
 
   const completedSets = sessionExercise?.sets || []
   const targetSets = exercise.sets
   const loadNote = getLoadNote(exercise)
 
-  // Straight sets: one weight for the whole exercise. Suggested progression wins,
-  // otherwise repeat last session's weight.
-  const suggestedWeight = progression?.reason === 'increase' ? progression.suggestedWeight : null
-  const prefillWeight = suggestedWeight ?? lastSets[0]?.weight ?? null
+  // One weight for the exercise: the recommended one, else last session's.
+  const prefillWeight = rec?.weight ?? lastSets[0]?.weight ?? null
 
   const [weight, setWeight] = useState(prefillWeight != null ? fmtWeight(prefillWeight) : '')
   const weightEdited = useRef(false)
@@ -100,8 +124,6 @@ export default function ExerciseCard({ exercise, sessionExercise, sessionId, onS
     if (weightEdited.current) return
     setWeight(prefillWeight != null ? fmtWeight(prefillWeight) : '')
   }, [loggedWeight, prefillWeight])
-
-  const step = exercise.isCompound ? 5 : 2.5
 
   const adjustWeight = (delta) => {
     weightEdited.current = true
@@ -135,13 +157,31 @@ export default function ExerciseCard({ exercise, sessionExercise, sessionId, onS
     return calcEstimated1RM(set.weight, set.reps) > calcEstimated1RM(currentPR.weight, currentPR.reps)
   }
 
-  // Reps carry forward from the previous set of this exercise, then from last
-  // session, then from the top of the target range.
+  // Rep goals follow the weight in the field, not only the recommended one.
+  const goals = useMemo(() => {
+    if (!rec?.goals) return null
+    const current = weight !== '' && !Number.isNaN(Number(weight)) ? Number(weight) : rec.weight
+    return goalsForWeight(exercise, rec, current, { step, bodyweight: settings.bodyweight })
+  }, [rec, weight, exercise, step, settings.bodyweight])
+
+  // Each row opens on today's goal for that set. It used to copy the set just logged,
+  // which is how a whole exercise came to read 12, 12, 12 whether or not it was. A set
+  // that fell short of its goal still pulls the next one down — fatigue is real.
   const lastLogged = completedSets[completedSets.length - 1]
   const prefillRepsFor = (i) => {
-    if (lastLogged) return lastLogged.reps
-    return lastSets[i]?.reps ?? lastSets[0]?.reps ?? exercise.repsMax
+    if (!goals) {
+      if (lastLogged) return lastLogged.reps
+      return lastSets[i]?.reps ?? lastSets[0]?.reps ?? exercise.repsMax
+    }
+    const goal = goals[i] ?? goals[goals.length - 1]
+    if (lastLogged && lastLogged.weight === Number(weight)) {
+      const previousGoal = goals[i - 1] ?? goal
+      if (lastLogged.reps < previousGoal) return Math.min(goal, lastLogged.reps)
+    }
+    return goal
   }
+
+  const offPlan = rec?.goals && goals && weightSet && Number(weight) !== rec.weight
 
   const allSetsComplete = !readOnly && !isWarmup && completedSets.length >= targetSets
 
@@ -232,7 +272,7 @@ export default function ExerciseCard({ exercise, sessionExercise, sessionId, onS
         {!isWarmup && (
           <div className="flex flex-wrap gap-1.5 mt-2.5">
             <span className="text-[10px] font-mono text-muted/70 bg-bg px-2 py-0.5 rounded">
-              Stop 1-2 reps before failure
+              {effort.label}
             </span>
             {exercise.isCompound && exercise.restSeconds >= 180 && (
               <span className="text-[10px] font-mono text-accent-secondary/70 bg-accent-secondary/5 px-2 py-0.5 rounded">
@@ -243,21 +283,30 @@ export default function ExerciseCard({ exercise, sessionExercise, sessionId, onS
         )}
 
         {/* Progressive overload nudge */}
-        {!readOnly && !isWarmup && progression && !allSetsComplete && (
-          progression.reason === 'increase' ? (
-            <div className="mt-2.5 px-2.5 py-1.5 rounded-md bg-accent/10 border border-accent/20">
-              <p className="text-[11px] font-mono text-accent leading-snug">
-                Increase weight — try{' '}
-                <span className="font-bold">{fmtWeight(progression.suggestedWeight)} {settings.unit}</span>
-              </p>
-            </div>
-          ) : progression.reason === 'keep_pushing' ? (
-            <div className="mt-2.5 px-2.5 py-1.5 rounded-md bg-bg border border-border/60">
-              <p className="text-[11px] font-mono text-muted leading-snug">
-                Hit {exercise.repsMax} reps on all sets to unlock next weight
-              </p>
-            </div>
-          ) : null
+        {!readOnly && !isWarmup && advice && !allSetsComplete && (
+          <div className={`mt-2.5 px-2.5 py-1.5 rounded-md border ${TONE_CLASSES[offPlan ? 'muted' : advice.tone].box}`}>
+            {offPlan ? (
+              <>
+                <p className="text-[11px] font-mono leading-snug font-bold text-muted">
+                  At {Number(weight) === 0 ? 'bodyweight' : `${fmtWeight(Number(weight))} ${settings.unit}`}: aim for {goals[0]} reps a set
+                </p>
+                <p className="text-[10px] font-mono text-muted/70 leading-snug mt-0.5">
+                  Suggested today: {rec.weight === 0 ? 'bodyweight' : `${fmtWeight(rec.weight)} ${settings.unit}`}
+                </p>
+              </>
+            ) : (
+              <>
+                <p className={`text-[11px] font-mono leading-snug font-bold ${TONE_CLASSES[advice.tone].text}`}>
+                  {advice.headline}
+                </p>
+                {advice.detail && (
+                  <p className="text-[10px] font-mono text-muted/70 leading-snug mt-0.5">
+                    {advice.detail}
+                  </p>
+                )}
+              </>
+            )}
+          </div>
         )}
       </div>
 
@@ -323,11 +372,28 @@ export default function ExerciseCard({ exercise, sessionExercise, sessionId, onS
               </button>
             </div>
 
-            {loadNote && (
-              <p className="text-[10px] font-mono text-muted/40 mt-1.5 pl-1 leading-snug">
+            <div className="flex items-start justify-between gap-3 mt-1.5 pl-1">
+              <p className="text-[10px] font-mono text-muted/40 leading-snug">
                 {loadNote}
               </p>
-            )}
+              <div className="flex items-center gap-1 shrink-0" role="group" aria-label="Weight step">
+                <span className="text-[9px] font-mono text-muted/40 uppercase tracking-wider mr-0.5">Step</span>
+                {STEP_OPTIONS.map(option => (
+                  <button
+                    key={option}
+                    onClick={() => setStep(option)}
+                    aria-pressed={step === option}
+                    className={`min-w-[28px] h-6 px-1.5 rounded text-[10px] font-mono transition-colors active:opacity-70 ${
+                      step === option
+                        ? 'bg-accent/10 text-accent border border-accent/30'
+                        : 'bg-bg text-muted/60 border border-border hover:text-text'
+                    }`}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             {lastSets.length > 0 && (
               <p className="text-[10px] font-mono text-muted/50 mt-1 pl-1">
@@ -359,6 +425,30 @@ export default function ExerciseCard({ exercise, sessionExercise, sessionId, onS
             })}
             {!weightSet && (
               <p className="text-[10px] font-mono text-muted/50 pl-1 pt-0.5">Set a weight to start logging</p>
+            )}
+
+            {/* One optional tap once the exercise is done. It sharpens next time's goal. */}
+            {allSetsComplete && sessionId && (
+              <div className="flex items-center gap-1.5 pt-1.5 pl-1">
+                <span className="text-[10px] font-mono text-muted/60 mr-1">Reps left on that last set?</span>
+                {EFFORT_OPTIONS.map(option => {
+                  const selected = sessionExercise?.effort === option.value
+                  return (
+                    <button
+                      key={option.value}
+                      onClick={() => setExerciseEffort(sessionId, exercise.id, selected ? null : option.value)}
+                      aria-pressed={selected}
+                      className={`min-w-[40px] h-8 px-2 rounded-md text-[11px] font-mono transition-colors active:opacity-70 ${
+                        selected
+                          ? 'bg-accent/15 text-accent border border-accent/40'
+                          : 'bg-bg text-muted border border-border hover:text-text'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  )
+                })}
+              </div>
             )}
           </div>
         </>

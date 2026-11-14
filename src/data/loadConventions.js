@@ -79,8 +79,14 @@ function inferKey(exercise) {
   return null
 }
 
-export function getLoadNote(exercise) {
+// The convention key itself — progression needs to know when a logged weight is added
+// to bodyweight, or when the reps field holds seconds.
+export function getLoadConvention(exercise) {
   if (!exercise) return null
-  const key = BY_ID[exercise.id] || inferKey(exercise)
+  return BY_ID[exercise.id] || inferKey(exercise)
+}
+
+export function getLoadNote(exercise) {
+  const key = getLoadConvention(exercise)
   return key ? CONVENTIONS[key] : null
 }

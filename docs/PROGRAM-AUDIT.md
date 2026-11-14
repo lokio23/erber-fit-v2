@@ -516,3 +516,37 @@ retrieved. Stronger By Science and MASS were unreachable (HTTP 403/paywall) thro
 Keep as-is: rep ranges (4–6 / 8–12 / 12–20), the 1–2 RIR cue, 180s and 120s rests, the lateral
 raise drop set (efficient, not superior), RDL + sumo deadlift + seated leg curl, both vertical
 and horizontal pulling, direct lateral and rear delt work, incline pressing, no tempo prescription.
+
+---
+
+## Revision 7 — progression and injury risk, November 2026
+
+Two further evidence reviews sit behind this revision:
+`reports/Hypertrophy pump session evidence.md` and `reports/Muscle growth versus injury risk.md`.
+It reverses two "keep as-is" calls above (the 4–6 rep openers and the sumo deadlift) because the
+question changed from "what grows the most" to "what grows the most for the least injury risk".
+
+**Program data (applied to stored programs by `REVISION_7` in `src/utils/migrateProgram.js`):**
+
+| Change | Evidence |
+|---|---|
+| Bench, back squat, weighted pull-up **4–6 → 6–8** | Hypertrophy is load-independent near failure (Schoenfeld 2017; Lopez 2021 [MA]); the only arm with joint dropouts was very heavy (Schoenfeld 2014 [RCT], confounded with volume). The log showed 8–12 reps being done on these lifts anyway [⚠ choice of 6–8 is judgement] |
+| Bulgarian split squat **10 → 8–12**, walking lunges **12 → 10–12** | A fixed rep count gives double progression nowhere to go |
+| Legs B: sumo deadlift → **Romanian deadlift** | No hypertrophy trial for the sumo deadlift; its muscles are trained by four other lifts; deadlifts lead lower-body injury presentations. RDL trains hamstrings at long length |
+| Push A: weighted dip **removed** | No hypertrophy trial, a pain signal in gym-user surveys (Bernstorff 2023 [SURV]), and logged once in three months |
+| Push B: dumbbell chest fly **removed** | Duplicates the cable crossover in the same session; was the set cut when the hour ran out |
+
+Kept after review: the barbell bent-over row (its flag is lumbar load, not injury data), rest
+periods, warm-ups, the six-day split.
+
+**Progression (`src/utils/progression.js`), replacing "add 5 / 2.5 lb when every set hits the top":**
+
+| Rule | Basis |
+|---|---|
+| Reps move first; load moves only once every set reaches the unlock number | Rep and load progression grow muscle equally (Plotkin 2022; Chaves 2024 [RCT]) |
+| Steps are 5 lb, or 10 lb per exercise — never 2.5 | What the equipment allows |
+| The unlock number rises with the size of the jump, capped at 25 reps | Growth is equal from ~8 to 30 reps near failure [MA]; Epley estimate, self-correcting [MODEL] |
+| Last-set target by equipment: 2 left on barbells and loaded bodyweight lifts, 1–2 on dumbbells, 0–1 on machines and cables | 1–2 RIR grows as much as failure (Refalo 2024 [RCT]); where to spend the risk is reasoning, not trial evidence [⚠] |
+| Optional "reps left" tap: 3+ adds two reps to every goal; 0 on a barbell lift holds the weight | [MODEL] |
+| Opened below the floor two sessions running → drop one step; 3+ weeks off a lift → 10% lighter; no more reps in three sessions → flagged | [MODEL] — no study sets these numbers |
+| One lighter ramp-up set is allowed when judging whether the working weight is owned | Matches how sets are actually logged |

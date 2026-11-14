@@ -151,6 +151,20 @@ export default function useWorkoutSession() {
     }))
   }, [setSessions])
 
+  // Reps left in the tank on the last set: 0, 1 (meaning 1-2) or 3 (3 or more);
+  // null clears it. Optional — progression works from reps alone without it.
+  const setExerciseEffort = useCallback((sessionId, exerciseId, effort) => {
+    setSessions(prev => prev.map(session => {
+      if (session.id !== sessionId) return session
+      return {
+        ...session,
+        exercises: (session.exercises || []).map(ex => (
+          ex.exerciseId === exerciseId ? { ...ex, effort } : ex
+        )),
+      }
+    }))
+  }, [setSessions])
+
   const updateExerciseNotes = useCallback((sessionId, exerciseId, notes, isWarmup = false) => {
     setSessions(prev => prev.map(session => {
       if (session.id !== sessionId) return session
@@ -284,6 +298,7 @@ export default function useWorkoutSession() {
     logSet,
     logSets,
     clearSets,
+    setExerciseEffort,
     swapExercise,
     updateExerciseNotes,
     completeSession,

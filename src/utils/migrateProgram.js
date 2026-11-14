@@ -1,6 +1,6 @@
 import { DEFAULT_PROGRAM, EXERCISE_LIBRARY } from '../data/workouts'
 
-const PROGRAM_VERSION = 6
+const PROGRAM_VERSION = 7
 
 // v6 — evidence-based revision of the default program. See docs/PROGRAM-AUDIT.md.
 //
@@ -40,6 +40,40 @@ const REVISION_6 = {
     add: ['leg_extension'],
     sets: { standing_calf_raise: 5 },
     rests: { standing_calf_raise: 90 },
+  },
+}
+
+// v7 — progression and injury-risk revision. See docs/PROGRAM-AUDIT.md and the two
+// reports in reports/.
+const REVISION_7 = {
+  // The 4-6 rep openers become 6-8. Hypertrophy is load-independent near failure
+  // (Schoenfeld 2017; Lopez 2021), strength still favours the heavier end, and the
+  // only trial with joint dropouts was the very-heavy arm (Schoenfeld 2014). 6-8 is
+  // heavier than the 8-12 actually being logged on these lifts without going lower.
+  // The weighted dip had been logged once in three months and carries a pain signal
+  // with no hypertrophy trial behind it; the presses and flyes cover the chest.
+  friday: {
+    reps: { bench_press: [6, 8] },
+    remove: ['chest_dip'],
+  },
+  saturday: {
+    reps: { weighted_pullup: [6, 8] },
+  },
+  // A fixed rep count leaves double progression nowhere to go.
+  sunday: {
+    reps: { barbell_squat: [6, 8], bulgarian_split_squat: [8, 12] },
+  },
+  // Duplicates the cable crossover in the same session, and was the set being cut
+  // when the hour ran out.
+  monday: {
+    remove: ['db_chest_fly'],
+  },
+  // The sumo deadlift had the poorest risk-to-growth ratio in the plan: no hypertrophy
+  // trial, its muscles already trained by four other lifts, and deadlifts lead the
+  // lower-body injury data. The Romanian deadlift trains the hamstrings at long length.
+  wednesday: {
+    replace: { sumo_deadlift: 'romanian_deadlift' },
+    reps: { walking_lunges: [10, 12] },
   },
 }
 
@@ -84,15 +118,17 @@ function applyRevision(day, spec) {
     }
   }
 
-  if (spec.sets || spec.rests) {
+  if (spec.sets || spec.rests || spec.reps) {
     exercises = exercises.map(ex => {
       const sets = spec.sets?.[ex.id]
       const rest = spec.rests?.[ex.id]
-      if (sets == null && rest == null) return ex
+      const reps = spec.reps?.[ex.id]
+      if (sets == null && rest == null && reps == null) return ex
       return {
         ...ex,
         ...(sets != null ? { sets } : {}),
         ...(rest != null ? { restSeconds: rest } : {}),
+        ...(reps != null ? { repsMin: reps[0], repsMax: reps[1] } : {}),
       }
     })
   }
@@ -150,6 +186,12 @@ export function migrateProgram(prog) {
   // Runs after the default merge so freshly added defaults get normalised too.
   if (from < 6) {
     for (const [dayKey, spec] of Object.entries(REVISION_6)) {
+      if (next[dayKey]) next[dayKey] = applyRevision(next[dayKey], spec)
+    }
+  }
+
+  if (from < 7) {
+    for (const [dayKey, spec] of Object.entries(REVISION_7)) {
       if (next[dayKey]) next[dayKey] = applyRevision(next[dayKey], spec)
     }
   }

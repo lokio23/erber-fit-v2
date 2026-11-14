@@ -65,8 +65,8 @@ export const DEFAULT_PROGRAM = {
     warmupExercises: LEGS_WARMUPS,
     exercises: [
       { id: 'hack_squat', name: 'Hack Squat or Front Squat', sets: 4, repsMin: 8, repsMax: 10, restSeconds: 120, isBuiltIn: true, isCompound: true },
-      { id: 'sumo_deadlift', name: 'Sumo Deadlift', sets: 3, repsMin: 6, repsMax: 8, restSeconds: 180, isBuiltIn: true, isCompound: true },
-      { id: 'walking_lunges', name: 'Walking Lunges (DBs)', sets: 3, repsMin: 12, repsMax: 12, restSeconds: 120, isBuiltIn: true, isCompound: true },
+      { id: 'romanian_deadlift', name: 'Romanian Deadlift', sets: 3, repsMin: 8, repsMax: 10, restSeconds: 180, isBuiltIn: true, isCompound: true },
+      { id: 'walking_lunges', name: 'Walking Lunges (DBs)', sets: 3, repsMin: 10, repsMax: 12, restSeconds: 120, isBuiltIn: true, isCompound: true },
       { id: 'leg_extension', name: 'Leg Extension', sets: 3, repsMin: 15, repsMax: 20, restSeconds: 90, isBuiltIn: true, isCompound: false },
       { id: 'seated_leg_curl', name: 'Seated Leg Curl', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 90, isBuiltIn: true, isCompound: false },
       { id: 'hip_thrust', name: 'Hip Thrust (DB or Barbell)', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 90, isBuiltIn: true, isCompound: true },
@@ -86,12 +86,11 @@ export const DEFAULT_PROGRAM = {
     muscleGroups: ['Chest', 'Shoulders', 'Triceps'],
     warmupExercises: PUSH_WARMUPS,
     exercises: [
-      { id: 'bench_press', name: 'Barbell Bench Press', sets: 4, repsMin: 4, repsMax: 6, restSeconds: 180, isBuiltIn: true, isCompound: true },
+      { id: 'bench_press', name: 'Barbell Bench Press', sets: 4, repsMin: 6, repsMax: 8, restSeconds: 180, isBuiltIn: true, isCompound: true },
       { id: 'incline_db_press', name: 'Incline Dumbbell Press', sets: 3, repsMin: 8, repsMax: 10, restSeconds: 120, isBuiltIn: true, isCompound: true },
       { id: 'seated_db_shoulder_press', name: 'Seated DB Shoulder Press', sets: 3, repsMin: 8, repsMax: 10, restSeconds: 120, isBuiltIn: true, isCompound: true },
       { id: 'cable_lateral_raise', name: 'Cable Lateral Raise', sets: 3, repsMin: 15, repsMax: 20, restSeconds: 90, isBuiltIn: true, isCompound: false },
       { id: 'overhead_cable_tricep_ext', name: 'Overhead Cable Tricep Extension', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 90, isBuiltIn: true, isCompound: false },
-      { id: 'chest_dip', name: 'Chest Dip (weighted)', sets: 2, repsMin: 10, repsMax: 12, restSeconds: 90, isBuiltIn: true, isCompound: true },
     ],
   },
   saturday: {
@@ -100,7 +99,7 @@ export const DEFAULT_PROGRAM = {
     muscleGroups: ['Back', 'Biceps', 'Rear Delts'],
     warmupExercises: PULL_WARMUPS,
     exercises: [
-      { id: 'weighted_pullup', name: 'Weighted Pull-Up', sets: 4, repsMin: 4, repsMax: 6, restSeconds: 180, isBuiltIn: true, isCompound: true },
+      { id: 'weighted_pullup', name: 'Weighted Pull-Up', sets: 4, repsMin: 6, repsMax: 8, restSeconds: 180, isBuiltIn: true, isCompound: true },
       { id: 'barbell_row', name: 'Barbell Bent-Over Row', sets: 3, repsMin: 6, repsMax: 8, restSeconds: 180, isBuiltIn: true, isCompound: true },
       { id: 'seated_cable_row', name: 'Seated Cable Row (wide grip)', sets: 3, repsMin: 10, repsMax: 12, restSeconds: 120, isBuiltIn: true, isCompound: true },
       { id: 'face_pull', name: 'Face Pull', sets: 3, repsMin: 15, repsMax: 20, restSeconds: 90, isBuiltIn: true, isCompound: false },
@@ -115,9 +114,9 @@ export const DEFAULT_PROGRAM = {
     muscleGroups: ['Quads', 'Hamstrings', 'Glutes', 'Calves'],
     warmupExercises: LEGS_WARMUPS,
     exercises: [
-      { id: 'barbell_squat', name: 'Barbell Back Squat', sets: 4, repsMin: 4, repsMax: 6, restSeconds: 180, isBuiltIn: true, isCompound: true },
+      { id: 'barbell_squat', name: 'Barbell Back Squat', sets: 4, repsMin: 6, repsMax: 8, restSeconds: 180, isBuiltIn: true, isCompound: true },
       { id: 'romanian_deadlift', name: 'Romanian Deadlift', sets: 3, repsMin: 8, repsMax: 10, restSeconds: 180, isBuiltIn: true, isCompound: true },
-      { id: 'bulgarian_split_squat', name: 'Bulgarian Split Squat', sets: 3, repsMin: 10, repsMax: 10, restSeconds: 120, isBuiltIn: true, isCompound: true },
+      { id: 'bulgarian_split_squat', name: 'Bulgarian Split Squat', sets: 3, repsMin: 8, repsMax: 12, restSeconds: 120, isBuiltIn: true, isCompound: true },
       { id: 'leg_extension', name: 'Leg Extension', sets: 3, repsMin: 15, repsMax: 20, restSeconds: 90, isBuiltIn: true, isCompound: false },
       { id: 'seated_leg_curl', name: 'Seated Leg Curl', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 90, isBuiltIn: true, isCompound: false },
       { id: 'standing_calf_raise', name: 'Standing Calf Raise', sets: 5, repsMin: 15, repsMax: 20, restSeconds: 90, isBuiltIn: true, isCompound: false },
@@ -160,7 +159,7 @@ export const EXERCISE_LIBRARY = [
   { id: 'wu_face_pull_light', name: 'Light Face Pull', sets: 2, repsMin: 15, repsMax: 20, restSeconds: 30, isBuiltIn: true, isCompound: false, isWarmup: true, muscleGroups: ['Warm-Up'] },
 
   // ── CHEST ──
-  { id: 'bench_press', name: 'Barbell Bench Press', sets: 4, repsMin: 4, repsMax: 6, restSeconds: 180, isBuiltIn: true, isCompound: true, muscleGroups: ['Chest', 'Triceps'], pattern: 'horizontal_press', primary: ['Chest'], secondary: ['Triceps', 'Shoulders'], lengthPosition: 'mid', equipment: 'barbell', technicalDemand: 'medium', locked: true },
+  { id: 'bench_press', name: 'Barbell Bench Press', sets: 4, repsMin: 6, repsMax: 8, restSeconds: 180, isBuiltIn: true, isCompound: true, muscleGroups: ['Chest', 'Triceps'], pattern: 'horizontal_press', primary: ['Chest'], secondary: ['Triceps', 'Shoulders'], lengthPosition: 'mid', equipment: 'barbell', technicalDemand: 'medium', locked: true },
   { id: 'incline_db_press', name: 'Incline Dumbbell Press', sets: 3, repsMin: 8, repsMax: 10, restSeconds: 120, isBuiltIn: true, isCompound: true, muscleGroups: ['Chest', 'Shoulders'], pattern: 'incline_press', primary: ['Chest'], secondary: ['Triceps', 'Shoulders'], lengthPosition: 'mid', equipment: 'dumbbell', technicalDemand: 'medium' },
   { id: 'incline_barbell_press', name: 'Incline Barbell Press', sets: 4, repsMin: 8, repsMax: 10, restSeconds: 120, isBuiltIn: true, isCompound: true, muscleGroups: ['Chest', 'Shoulders'], pattern: 'incline_press', primary: ['Chest'], secondary: ['Triceps', 'Shoulders'], lengthPosition: 'mid', equipment: 'barbell', technicalDemand: 'medium', locked: true },
   { id: 'flat_db_press', name: 'Flat Dumbbell Press', sets: 3, repsMin: 8, repsMax: 12, restSeconds: 120, isBuiltIn: true, isCompound: true, muscleGroups: ['Chest', 'Triceps'], pattern: 'horizontal_press', primary: ['Chest'], secondary: ['Triceps', 'Shoulders'], lengthPosition: 'mid', equipment: 'dumbbell', technicalDemand: 'medium' },
@@ -198,7 +197,7 @@ export const EXERCISE_LIBRARY = [
   { id: 'single_arm_pushdown', name: 'Single-Arm Cable Pushdown', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: false, muscleGroups: ['Triceps'], pattern: 'elbow_extension', primary: ['Triceps'], secondary: [], lengthPosition: 'shortened', equipment: 'cable', technicalDemand: 'low' },
 
   // ── BACK ──
-  { id: 'weighted_pullup', name: 'Weighted Pull-Up', sets: 4, repsMin: 4, repsMax: 6, restSeconds: 180, isBuiltIn: true, isCompound: true, muscleGroups: ['Back', 'Biceps'], pattern: 'vertical_pull', primary: ['Back'], secondary: ['Biceps'], lengthPosition: 'mid', equipment: 'bodyweight', technicalDemand: 'medium', locked: true },
+  { id: 'weighted_pullup', name: 'Weighted Pull-Up', sets: 4, repsMin: 6, repsMax: 8, restSeconds: 180, isBuiltIn: true, isCompound: true, muscleGroups: ['Back', 'Biceps'], pattern: 'vertical_pull', primary: ['Back'], secondary: ['Biceps'], lengthPosition: 'mid', equipment: 'bodyweight', technicalDemand: 'medium', locked: true },
   { id: 'chin_up', name: 'Chin-Up (weighted or BW)', sets: 3, repsMin: 6, repsMax: 10, restSeconds: 120, isBuiltIn: true, isCompound: true, muscleGroups: ['Back', 'Biceps'], pattern: 'vertical_pull', primary: ['Back'], secondary: ['Biceps'], lengthPosition: 'mid', equipment: 'bodyweight', technicalDemand: 'medium' },
   { id: 'barbell_row', name: 'Barbell Bent-Over Row', sets: 3, repsMin: 6, repsMax: 8, restSeconds: 180, isBuiltIn: true, isCompound: true, muscleGroups: ['Back'], pattern: 'horizontal_row', primary: ['Back'], secondary: ['Biceps', 'Rear Delts'], lengthPosition: 'mid', equipment: 'barbell', technicalDemand: 'high', locked: true },
   { id: 'pendlay_row', name: 'Pendlay Row', sets: 3, repsMin: 5, repsMax: 8, restSeconds: 180, isBuiltIn: true, isCompound: true, muscleGroups: ['Back'], pattern: 'horizontal_row', primary: ['Back'], secondary: ['Biceps', 'Rear Delts'], lengthPosition: 'mid', equipment: 'barbell', technicalDemand: 'high', locked: true },
@@ -236,7 +235,7 @@ export const EXERCISE_LIBRARY = [
   { id: 'cable_rear_delt_fly', name: 'Cable Rear Delt Fly', sets: 3, repsMin: 12, repsMax: 15, restSeconds: 60, isBuiltIn: true, isCompound: false, muscleGroups: ['Rear Delts'], pattern: 'rear_delt_fly', primary: ['Rear Delts'], secondary: [], lengthPosition: 'shortened', equipment: 'cable', technicalDemand: 'low' },
 
   // ── QUADS ──
-  { id: 'barbell_squat', name: 'Barbell Back Squat', sets: 4, repsMin: 4, repsMax: 6, restSeconds: 180, isBuiltIn: true, isCompound: true, muscleGroups: ['Quads', 'Glutes'], pattern: 'squat', primary: ['Quads', 'Glutes'], secondary: [], lengthPosition: 'lengthened', equipment: 'barbell', technicalDemand: 'high', locked: true },
+  { id: 'barbell_squat', name: 'Barbell Back Squat', sets: 4, repsMin: 6, repsMax: 8, restSeconds: 180, isBuiltIn: true, isCompound: true, muscleGroups: ['Quads', 'Glutes'], pattern: 'squat', primary: ['Quads', 'Glutes'], secondary: [], lengthPosition: 'lengthened', equipment: 'barbell', technicalDemand: 'high', locked: true },
   { id: 'hack_squat', name: 'Hack Squat', sets: 4, repsMin: 8, repsMax: 10, restSeconds: 120, isBuiltIn: true, isCompound: true, muscleGroups: ['Quads'], pattern: 'squat', primary: ['Quads'], secondary: ['Glutes'], lengthPosition: 'lengthened', equipment: 'machine', technicalDemand: 'low', locked: true },
   { id: 'front_squat', name: 'Front Squat', sets: 4, repsMin: 6, repsMax: 8, restSeconds: 180, isBuiltIn: true, isCompound: true, muscleGroups: ['Quads', 'Glutes'], pattern: 'squat', primary: ['Quads', 'Glutes'], secondary: [], lengthPosition: 'lengthened', equipment: 'barbell', technicalDemand: 'high', locked: true },
   { id: 'goblet_squat', name: 'Goblet Squat', sets: 3, repsMin: 10, repsMax: 15, restSeconds: 90, isBuiltIn: true, isCompound: true, muscleGroups: ['Quads', 'Glutes'], pattern: 'squat', primary: ['Quads', 'Glutes'], secondary: [], lengthPosition: 'lengthened', equipment: 'dumbbell', technicalDemand: 'medium' },
